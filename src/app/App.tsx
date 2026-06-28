@@ -152,7 +152,7 @@ export default function App() {
         </header>
       )}
 
-      <main className="max-w-lg mx-auto px-4 py-">
+      <main className="max-w-lg mx-auto px-4 py-6">
 
         {page.tag === "onboarding" && (
           <div className="flex flex-col justify-center min-h-[70vh]">
@@ -170,11 +170,18 @@ export default function App() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-[#7a8099] text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <label
+                  htmlFor="userName"
+                  className="text-[#7a8099] text-xs uppercase tracking-widest mb-2 block"
+                  style={{ fontFamily: "'Inter', sans-serif" }}
+                >
                   Como podemos te chamar?
                 </label>
                 <input
+                  id="userName"
+                  name="userName"
                   type="text"
+                  autoComplete="name"
                   placeholder="Seu nome"
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
