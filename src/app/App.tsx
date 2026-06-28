@@ -9,40 +9,24 @@ import { SessionDetail } from "./components/SessionDetail";
 type Phase = "pre" | "during" | "post";
 
 type AppPage =
+  | { tag: "onboarding" }
   | { tag: "home" }
   | { tag: "workout"; phase: Phase }
   | { tag: "history" }
   | { tag: "detail"; session: WorkoutSession };
 
-const SAMPLE_SESSIONS: WorkoutSession[] = [
-  {
-    id: "1",
-    date: "18/06/2026 — 07:15",
-    pre: { systolic: "124", diastolic: "82", bpm: "72", ihb: false },
-    during: { systolic: "148", diastolic: "92", bpm: "158", distance: "18.4", timeSeconds: 2700 },
-    post: { systolic: "130", diastolic: "84", bpm: "88", ihb: false },
-  },
-  {
-    id: "2",
-    date: "16/06/2026 — 06:45",
-    pre: { systolic: "130", diastolic: "86", bpm: "78", ihb: true },
-    during: { systolic: "155", diastolic: "95", bpm: "165", distance: "22.1", timeSeconds: 3300 },
-    post: { systolic: "134", diastolic: "88", bpm: "92", ihb: false },
-  },
-];
 
 function IHBToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
       onClick={() => onChange(!value)}
-      className={`flex items-center gap-3 w-full rounded-xl border p-4 transition-all ${
-        value
-          ? "border-[#ff3b5c] bg-[#ff3b5c]/10"
-          : "border-[rgba(0,229,255,0.12)] bg-[#1e2330] hover:border-[rgba(0,229,255,0.3)]"
-      }`}
+      className={`flex items-center gap-3 w-full rounded-xl border p-4 transition-all ${value
+        ? "border-[#ff5c00] bg-[#ff5c00]/10"
+        : "border-[rgba(0,229,255,0.12)] bg-[#1e2330] hover:border-[rgba(0,229,255,0.3)]"
+        }`}
     >
       {value ? (
-        <AlertCircle size={20} className="text-[#ff3b5c] shrink-0" />
+        <AlertCircle size={20} className="text-[#ff5c00] shrink-0" />
       ) : (
         <CheckCircle2 size={20} className="text-[#7a8099] shrink-0" />
       )}
@@ -50,11 +34,11 @@ function IHBToggle({ value, onChange }: { value: boolean; onChange: (v: boolean)
         <p className="text-xs uppercase tracking-widest text-[#7a8099]" style={{ fontFamily: "'Inter', sans-serif" }}>
           IHB — Batimento Irregular
         </p>
-        <p className="text-sm mt-0.5" style={{ fontFamily: "'Inter', sans-serif", color: value ? "#ff3b5c" : "#e8eaf0" }}>
+        <p className="text-sm mt-0.5" style={{ fontFamily: "'Inter', sans-serif", color: value ? "#ff5c00" : "#e8eaf0" }}>
           {value ? "Detectado" : "Não detectado"}
         </p>
       </div>
-      <div className={`ml-auto w-10 h-6 rounded-full transition-all relative shrink-0 ${value ? "bg-[#ff3b5c]" : "bg-[#2e3448]"}`}>
+      <div className={`ml-auto w-10 h-6 rounded-full transition-all relative shrink-0 ${value ? "bg-[#ff5c00]" : "bg-[#2e3448]"}`}>
         <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${value ? "left-5" : "left-1"}`} />
       </div>
     </button>
@@ -106,29 +90,33 @@ function StepIndicator({ current }: { current: Phase }) {
 }
 
 export default function App() {
-  const [page, setPage] = useState<AppPage>({ tag: "home" });
-  const [sessions, setSessions] = useState<WorkoutSession[]>(SAMPLE_SESSIONS);
+  const [page, setPage] = useState<AppPage>({ tag: "onboarding" });
+  const [sessions, setSessions] = useState<WorkoutSession[]>([]);
 
+  const [userName, setUserName] = useState("");
   const [pre, setPre] = useState({ systolic: "", diastolic: "", bpm: "", ihb: false });
-  const [during, setDuring] = useState({ systolic: "", diastolic: "", bpm: "", distance: "", timeSeconds: 0 });
+  const [during, setDuring] = useState({ systolic: "", diastolic: "", bpm: "", distance: "", timeSeconds: 0, speed: "" });
   const [post, setPost] = useState({ systolic: "", diastolic: "", bpm: "", ihb: false });
 
   function startNewWorkout() {
     setPre({ systolic: "", diastolic: "", bpm: "", ihb: false });
-    setDuring({ systolic: "", diastolic: "", bpm: "", distance: "", timeSeconds: 0 });
+    setDuring({ systolic: "", diastolic: "", bpm: "", distance: "", timeSeconds: 0, speed: "" });
     setPost({ systolic: "", diastolic: "", bpm: "", ihb: false });
     setPage({ tag: "workout", phase: "pre" });
   }
 
   function saveSession() {
+    const hours = during.timeSeconds / 3600;
+    const speed = hours > 0 && during.distance
+      ? (parseFloat(during.distance) / hours).toFixed(1)
+      : "0";
     const now = new Date();
-    const date = `${String(now.getDate()).padStart(2,"0")}/${String(now.getMonth()+1).padStart(2,"0")}/${now.getFullYear()} — ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
-    setSessions((s) => [...s, { id: Date.now().toString(), date, pre, during, post }]);
-    setPage({ tag: "history" });
+    const date = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()} — ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    setSessions((s) => [...s, { id: Date.now().toString(), date, pre, during: { ...during, speed }, post }]); setPage({ tag: "history" });
   }
 
   const canAdvancePre = pre.systolic && pre.diastolic && pre.bpm;
-  const canAdvanceDuring = during.systolic && during.diastolic && during.bpm;
+  const canAdvanceDuring = during.bpm;
   const canSavePost = post.systolic && post.diastolic && post.bpm;
 
   const isHistory = page.tag === "history" || page.tag === "detail";
@@ -136,55 +124,110 @@ export default function App() {
   return (
     <div className="min-h-screen w-full" style={{ background: "#0d0f14", fontFamily: "'Inter', sans-serif" }}>
       {/* Header */}
-      <header className="border-b border-[rgba(0,229,255,0.08)] px-4 py-4 flex items-center justify-between max-w-lg mx-auto">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#00e5ff]/10 flex items-center justify-center">
-            <Bike size={18} className="text-[#00e5ff]" />
+      {page.tag !== "onboarding" && (
+        <header className="border-b border-[rgba(0,229,255,0.08)] px-4 py-4 flex items-center justify-between max-w-lg mx-auto">
+          <div className="flex items-center gap-2">
+            <img src="/icon.png" alt="FlowHeart" className="w-8 h-8 rounded-lg object-contain" />
+            <div>
+              <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1 }}>
+                FLOW<span className="text-[#ff3131]">HEART</span>
+              </p>
+              <p className="text-[#3a3f52]" style={{ fontSize: "0.6rem", letterSpacing: "0.1em" }}>BIKE TRAINING TRACKER</p>
+            </div>
           </div>
-          <div>
-            <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1 }}>
-              SPIN<span className="text-[#00e5ff]">LOG</span>
-            </p>
-            <p className="text-[#3a3f52]" style={{ fontSize: "0.6rem", letterSpacing: "0.1em" }}>BIKE TRAINING TRACKER</p>
-          </div>
-        </div>
-        <nav className="flex gap-1">
-          <button
-            onClick={() => setPage({ tag: "home" })}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-all ${page.tag === "home" ? "bg-[#1e2330] text-[#00e5ff]" : "text-[#7a8099] hover:text-[#e8eaf0]"}`}
-          >
-            Início
-          </button>
-          <button
-            onClick={() => setPage({ tag: "history" })}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-all ${isHistory ? "bg-[#1e2330] text-[#00e5ff]" : "text-[#7a8099] hover:text-[#e8eaf0]"}`}
-          >
-            Histórico
-          </button>
-        </nav>
-      </header>
+          <nav className="flex gap-1">
+            <button
+              onClick={() => setPage({ tag: "home" })}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-all ${page.tag === "home" ? "bg-[#1e2330] text-[#00e5ff]" : "text-[#7a8099] hover:text-[#e8eaf0]"}`}
+            >
+              Início
+            </button>
+            <button
+              onClick={() => setPage({ tag: "history" })}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-all ${isHistory ? "bg-[#1e2330] text-[#00e5ff]" : "text-[#7a8099] hover:text-[#e8eaf0]"}`}
+            >
+              Histórico
+            </button>
+          </nav>
+        </header>
+      )}
 
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <main className="max-w-lg mx-auto px-4 py-">
+
+        {page.tag === "onboarding" && (
+          <div className="flex flex-col justify-center min-h-[70vh]">
+            <div className="flex flex-col items-center gap-6 m-6">
+              <img src="/icon.png" alt="FlowHeart" className="w-30 h-30 rounded-lg object-contain" />
+            </div>
+            <div className="mb-8">
+              <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2.5rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1.05 }}>
+                BEM-VINDO AO<br /><span className="text-[#00e5ff]">FLOW</span><span className="text-[#ff3131]">HEART</span>
+              </h1>
+              <p className="text-[#7a8099] mt-2 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Seu tracker de treino de ciclismo com monitoramento cardíaco.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[#7a8099] text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  Como podemos te chamar?
+                </label>
+                <input
+                  type="text"
+                  placeholder="Seu nome"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  className="w-full rounded-xl border border-[rgba(0,229,255,0.12)] bg-[#1e2330] px-4 py-3 text-[#e8eaf0] outline-none focus:border-[#00e5ff] transition-all"
+                  style={{ fontFamily: "'Inter', sans-serif" }}
+                />
+              </div>
+
+              <button
+                disabled={!userName.trim()}
+                onClick={() => setPage({ tag: "home" })}
+                className="w-full rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+                style={{ background: "linear-gradient(135deg, #00e5ff 0%, #00b8cc 100%)", color: "#0d0f14" }}
+              >
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
+                  COMEÇAR
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* HOME */}
         {page.tag === "home" && (
-          <div>
+          <div className="space-y-6 flex flex-col justify-center min-h-[70vh]">
             <div className="mb-8">
               <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2.5rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1.05 }}>
-                BEM-VINDO<br /><span className="text-[#00e5ff]">AO SEU TREINO</span>
+                <span>OLÁ, </span>
+                <span className="text-[#00e5ff]">{userName.toUpperCase()}</span><br />
+                <span>PRONTO PARA TREINAR?</span>
               </h1>
               <p className="text-[#7a8099] mt-2 text-sm">Monitore pressão arterial, frequência cardíaca e desempenho em cada sessão.</p>
             </div>
+            <button
+              onClick={startNewWorkout}
+              className="w-full rounded-xl py-4 flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-[0.98] mb-6"
+              style={{ background: "linear-gradient(135deg, #00e5ff 0%, #00b8cc 100%)", color: "#0d0f14" }}
+            >
+              <Plus size={20} />
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>INICIAR NOVO TREINO</span>
+            </button>
 
             {sessions.length > 0 && (() => {
               const last = sessions[sessions.length - 1];
               return (
-                <div className="rounded-xl border border-[rgba(0,229,255,0.12)] bg-[#161a23] p-4 mb-6">
+                <button
+                  onClick={() => setPage({ tag: "detail", session: last })} className="w-full text-left rounded-xl border border-[rgba(0,229,255,0.12)] bg-[#161a23] p-4 mb-6 hover:border-[#00e5ff] hover:bg-[#1e2330] transition-all"
+                >
                   <p className="text-[#7a8099] text-xs uppercase tracking-widest mb-3">Último Treino</p>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <p className="text-[#7a8099] text-xs mb-1">BPM Máx</p>
-                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "1.4rem", fontWeight: 700, color: "#ff5733" }}>{last.during.bpm}</p>
+                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "1.4rem", fontWeight: 700, color: "#ff3131" }}>{last.during.bpm}</p>
                     </div>
                     <div>
                       <p className="text-[#7a8099] text-xs mb-1">Distância</p>
@@ -195,18 +238,9 @@ export default function App() {
                       <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "1rem", fontWeight: 600, color: "#e8eaf0", paddingTop: "0.2rem" }}>{last.post.systolic}/{last.post.diastolic}</p>
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })()}
-
-            <button
-              onClick={startNewWorkout}
-              className="w-full rounded-xl py-4 flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-[0.98]"
-              style={{ background: "linear-gradient(135deg, #00e5ff 0%, #00b8cc 100%)", color: "#0d0f14" }}
-            >
-              <Plus size={20} />
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>INICIAR NOVO TREINO</span>
-            </button>
 
             {sessions.length > 0 && (
               <button
@@ -241,8 +275,7 @@ export default function App() {
                   disabled={!canAdvancePre}
                   onClick={() => setPage({ tag: "workout", phase: "during" })}
                   className="w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-                  style={{ background: canAdvancePre ? "linear-gradient(135deg, #ff5733, #e03000)" : "#1e2330", color: "#fff" }}
-                >
+                  style={{ background: "linear-gradient(135deg, #00e5ff 0%, #00b8cc 100%)", color: "#0d0f14" }}                >
                   <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>INICIAR TREINO</span>
                   <ChevronRight size={18} />
                 </button>
@@ -254,11 +287,6 @@ export default function App() {
                 <PhaseHeader phase="during" />
                 <div className="space-y-3">
                   <WorkoutTimer onTimeChange={(s) => setDuring((p) => ({ ...p, timeSeconds: s }))} />
-                  <BloodPressureInput
-                    systolic={during.systolic} diastolic={during.diastolic}
-                    onSystolicChange={(v) => setDuring((p) => ({ ...p, systolic: v }))}
-                    onDiastolicChange={(v) => setDuring((p) => ({ ...p, diastolic: v }))}
-                  />
                   <MetricInput label="Frequência Cardíaca" unit="bpm" value={during.bpm} onChange={(v) => setDuring((p) => ({ ...p, bpm: v }))} placeholder="158" icon={<Activity size={14} />} min={30} max={250} />
                   <MetricInput label="Distância Percorrida" unit="km" value={during.distance} onChange={(v) => setDuring((p) => ({ ...p, distance: v }))} placeholder="20.0" icon={<Bike size={14} />} />
                 </div>
@@ -305,7 +333,9 @@ export default function App() {
           <div>
             <div className="mb-6">
               <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2rem", fontWeight: 800, color: "#e8eaf0" }}>HISTÓRICO</h2>
-              <p className="text-[#7a8099] text-sm mt-1">{sessions.length} treino{sessions.length !== 1 ? "s" : ""} registrado{sessions.length !== 1 ? "s" : ""}</p>
+              {sessions.length > 0 && (
+                <p className="text-[#7a8099] text-sm mt-1">{sessions.length} treino{sessions.length !== 1 ? "s" : ""} registrado{sessions.length !== 1 ? "s" : ""}</p>
+              )}
             </div>
             <SessionHistory
               sessions={sessions}
@@ -323,6 +353,13 @@ export default function App() {
         )}
 
       </main>
+      {(page.tag === "onboarding" || page.tag === "home") && (
+        <footer className="fixed bottom-0 left-0 right-0 border-t border-[rgba(0,229,255,0.08)] py-3 text-center" style={{ background: "#0d0f14" }}>
+          <p className="text-[#3a3f52] text-xs" style={{ fontFamily: "'Inter', sans-serif" }}>
+            FLOWHEART © {new Date().getFullYear()}
+          </p>
+        </footer>
+      )}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { AlertCircle } from "lucide-react";
+
 /*
  * SessionDetail.tsx — Tela de análise detalhada de uma sessão de treino
  *
@@ -194,27 +196,12 @@ const PHASE_LABELS = ["Pré", "Durante", "Pós"];
 export function SessionDetail({ session, onBack }: SessionDetailProps) {
   // Dois hooks independentes — cada um observa seu próprio container
   const bpmRef = useContainerWidth();
-  const paRef  = useContainerWidth();
 
   // Extrai os valores de BPM das 3 fases como array numérico
   const bpmValues = [
     Number(session.pre.bpm) || 0,
     Number(session.during.bpm) || 0,
     Number(session.post.bpm) || 0,
-  ];
-
-  // Extrai pressão sistólica das 3 fases
-  const sisValues = [
-    Number(session.pre.systolic) || 0,
-    Number(session.during.systolic) || 0,
-    Number(session.post.systolic) || 0,
-  ];
-
-  // Extrai pressão diastólica das 3 fases
-  const diaValues = [
-    Number(session.pre.diastolic) || 0,
-    Number(session.during.diastolic) || 0,
-    Number(session.post.diastolic) || 0,
   ];
 
   return (
@@ -246,7 +233,7 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
         <div className="flex flex-col gap-1 items-end shrink-0">
           {session.pre.ihb && (
             <span
-              className="px-2 py-0.5 rounded-full bg-[#ff3b5c]/15 text-[#ff3b5c] text-xs whitespace-nowrap"
+              className="px-2 py-0.5 rounded-full bg-[#ff5c00]/15 text-[#ff5c00] text-xs whitespace-nowrap"
               style={{ fontFamily: "'Inter', sans-serif" }}
             >
               IHB Pré
@@ -254,7 +241,7 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
           )}
           {session.post.ihb && (
             <span
-              className="px-2 py-0.5 rounded-full bg-[#ff3b5c]/15 text-[#ff3b5c] text-xs whitespace-nowrap"
+              className="px-2 py-0.5 rounded-full bg-[#ff5c00]/15 text-[#ff5c00] text-xs whitespace-nowrap"
               style={{ fontFamily: "'Inter', sans-serif" }}
             >
               IHB Pós
@@ -263,56 +250,47 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
         </div>
       </div>
 
-      {/* Cards de estatística: Distância e Duração */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="rounded-xl bg-[#1e2330] border border-[rgba(0,229,255,0.12)] p-4">
           <div className="flex items-center gap-2 mb-1">
             <Bike size={13} className="text-[#00e5ff] shrink-0" />
-            <span
-              className="text-[#7a8099] text-xs uppercase tracking-wider"
-              style={{ fontFamily: "'Inter', sans-serif" }}
-            >
+            <span className="text-[#7a8099] text-xs uppercase tracking-wider" style={{ fontFamily: "'Inter', sans-serif" }}>
               Distância
             </span>
           </div>
-          <p
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: "1.6rem",
-              fontWeight: 700,
-              color: "#00e5ff",
-              lineHeight: 1.1,
-            }}
-          >
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "1.6rem", fontWeight: 700, color: "#00e5ff", lineHeight: 1.1 }}>
             {session.during.distance}
             <span className="text-[#7a8099] text-sm ml-1">km</span>
           </p>
         </div>
+
         <div className="rounded-xl bg-[#1e2330] border border-[rgba(0,229,255,0.12)] p-4">
           <div className="flex items-center gap-2 mb-1">
             <Clock size={13} className="text-[#00e5ff] shrink-0" />
-            <span
-              className="text-[#7a8099] text-xs uppercase tracking-wider"
-              style={{ fontFamily: "'Inter', sans-serif" }}
-            >
+            <span className="text-[#7a8099] text-xs uppercase tracking-wider" style={{ fontFamily: "'Inter', sans-serif" }}>
               Duração
             </span>
           </div>
-          <p
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: "1.6rem",
-              fontWeight: 700,
-              color: "#e8eaf0",
-              lineHeight: 1.1,
-            }}
-          >
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "1.6rem", fontWeight: 700, color: "#e8eaf0", lineHeight: 1.1 }}>
             {fmtTime(session.during.timeSeconds)}
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-[#1e2330] border border-[rgba(0,229,255,0.12)] p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Bike size={13} className="text-[#ff5733] shrink-0" />
+            <span className="text-[#7a8099] text-xs uppercase tracking-wider" style={{ fontFamily: "'Inter', sans-serif" }}>
+              Vel. Média
+            </span>
+          </div>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "1.6rem", fontWeight: 700, color: "#ff5733", lineHeight: 1.1 }}>
+            {session.during.speed}
+            <span className="text-[#7a8099] text-sm ml-1">km/h</span>
           </p>
         </div>
       </div>
 
-      {/* Gráfico BPM — linha laranja única (3 pontos: pré, durante, pós) */}
+      {/* Gráfico BPM — linha vermelha neon única (3 pontos: pré, durante, pós) */}
       <div className="rounded-xl bg-[#1e2330] border border-[rgba(0,229,255,0.12)] p-4 mb-4">
         <p
           className="text-[#7a8099] text-xs uppercase tracking-widest mb-3"
@@ -328,60 +306,14 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
               width={bpmRef.width}
               height={130}
               labels={PHASE_LABELS}
-              series={[{ values: bpmValues, color: "#ff5733" }]}
+              series={[{ values: bpmValues, color: "#ff3131" }]}
             />
           )}
-        </div>
-      </div>
-
-      {/* Gráfico PA — duas linhas: sistólica (ciano sólido) + diastólica (cinza tracejado) */}
-      <div className="rounded-xl bg-[#1e2330] border border-[rgba(0,229,255,0.12)] p-4 mb-4">
-        <p
-          className="text-[#7a8099] text-xs uppercase tracking-widest mb-3"
-          style={{ fontFamily: "'Inter', sans-serif" }}
-        >
-          Pressão Arterial (mmHg)
-        </p>
-        <div ref={paRef.ref} style={{ width: "100%", height: 130 }}>
-          {paRef.width > 0 && (
-            <SimpleLineChart
-              id="pa"
-              width={paRef.width}
-              height={130}
-              labels={PHASE_LABELS}
-              series={[
-                { values: sisValues, color: "#00e5ff" },               // sistólica
-                { values: diaValues, color: "#7a8099", dashed: true }, // diastólica
-              ]}
-            />
-          )}
-        </div>
-        {/* Legenda manual das duas séries do gráfico PA */}
-        <div className="flex gap-4 mt-2">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-0.5 rounded bg-[#00e5ff]" />
-            <span className="text-[#7a8099] text-xs" style={{ fontFamily: "'Inter', sans-serif" }}>
-              Sistólica
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            {/* Linha tracejada simulada com gradiente repetido */}
-            <div
-              className="w-3 h-0.5 rounded bg-[#7a8099]"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(90deg,#7a8099 0,#7a8099 4px,transparent 4px,transparent 7px)",
-              }}
-            />
-            <span className="text-[#7a8099] text-xs" style={{ fontFamily: "'Inter', sans-serif" }}>
-              Diastólica
-            </span>
-          </div>
         </div>
       </div>
 
       {/* Tabela por fase: Pré / Durante / Pós com PA, BPM e IHB */}
-      <div className="space-y-2">
+      <div className="space-y-2" style={{ paddingBottom: "2rem" }}>
         {/*
          * Cada objeto da lista define uma fase.
          * `ihb: null` na fase "Durante" oculta o campo IHB (não é coletado
@@ -394,15 +326,15 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
             dia: session.pre.diastolic,
             bpm: session.pre.bpm,
             ihb: session.pre.ihb as boolean | null,
-            color: "#7a8099",
+            color: "#39ff14",
           },
           {
-            label: "Durante",
-            sys: session.during.systolic,
-            dia: session.during.diastolic,
+            label: "Durante-Treino",
+            sys: null,
+            dia: null,
             bpm: session.during.bpm,
             ihb: null as boolean | null, // IHB não coletado durante o treino
-            color: "#ff5733",
+            color: "#ff3131",
           },
           {
             label: "Pós-Treino",
@@ -415,27 +347,23 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
         ].map((phase) => (
           <div
             key={phase.label}
-            className="rounded-xl bg-[#161a23] border border-[rgba(0,229,255,0.08)] p-4 flex items-center gap-4"
+            className="rounded-xl bg-[#161a23] border border-[rgba(0,229,255,0.08)] p-4 flex items-center gap-4 mb-2"
           >
             {/* Barra vertical colorida como identificador visual da fase */}
             <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: phase.color }} />
             <div className="flex-1 grid grid-cols-3 gap-2">
               <div>
-                <p
-                  className="text-xs mb-0.5 font-semibold"
-                  style={{ fontFamily: "'Inter', sans-serif", color: phase.color }}
-                >
+                <p className="text-xs mb-0.5 font-semibold" style={{ fontFamily: "'Inter', sans-serif", color: phase.color }}>
                   {phase.label}
                 </p>
-                <p className="text-[#7a8099] text-xs" style={{ fontFamily: "'Inter', sans-serif" }}>
-                  PA
-                </p>
-                <p
-                  className="text-[#e8eaf0]"
-                  style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.82rem" }}
-                >
-                  {phase.sys}/{phase.dia}
-                </p>
+                {phase.sys !== null && (
+                  <>
+                    <p className="text-[#7a8099] text-xs" style={{ fontFamily: "'Inter', sans-serif" }}>PA</p>
+                    <p className="text-[#e8eaf0]" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.82rem" }}>
+                      {phase.sys}/{phase.dia}
+                    </p>
+                  </>
+                )}
               </div>
               <div className="flex flex-col justify-end">
                 <p className="text-[#7a8099] text-xs" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -447,16 +375,13 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
               </div>
               <div className="flex flex-col justify-end items-start">
                 {/* Renderiza o badge IHB somente nas fases pré e pós */}
-                {phase.ihb !== null && (
+                {phase.ihb && (
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
-                      phase.ihb
-                        ? "bg-[#ff3b5c]/15 text-[#ff3b5c]"  // detectado — alerta vermelho
-                        : "bg-[#2e3448] text-[#7a8099]"      // não detectado — neutro
-                    }`}
+                    className="flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-[#ff5c00]/15 text-[#ff5c00]"
                     style={{ fontFamily: "'Inter', sans-serif" }}
                   >
-                    IHB {phase.ihb ? "+" : "–"}
+                    <AlertCircle size={14} className="text-[#ff5c00] shrink-0" />
+                    IHB
                   </span>
                 )}
               </div>

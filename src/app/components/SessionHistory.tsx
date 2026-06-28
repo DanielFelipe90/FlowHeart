@@ -1,3 +1,4 @@
+import { AlertCircle } from "lucide-react";
 /*
  * SessionHistory.tsx — Lista de sessões de treino registradas
  *
@@ -38,7 +39,7 @@ export interface WorkoutSession {
   id: string;
   date: string;
   pre: { systolic: string; diastolic: string; bpm: string; ihb: boolean };
-  during: { systolic: string; diastolic: string; bpm: string; distance: string; timeSeconds: number };
+  during: { systolic: string; diastolic: string; bpm: string; distance: string; timeSeconds: number; speed: string; };
   post: { systolic: string; diastolic: string; bpm: string; ihb: boolean };
 }
 
@@ -104,26 +105,21 @@ export function SessionHistory({ sessions, onSelect }: SessionHistoryProps) {
             {/* Badge IHB aparece se houver detecção em qualquer fase da sessão */}
             {(s.pre.ihb || s.post.ihb) && (
               <span
-                className="px-2 py-0.5 rounded-full bg-[#ff3b5c]/15 text-[#ff3b5c] text-xs"
+                className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#ff5c00]/15 text-[#ff5c00] text-xs"
                 style={{ fontFamily: "'Inter', sans-serif" }}
               >
+                <AlertCircle size={14} className="text-[#ff5c00] shrink-0" />
                 IHB
               </span>
             )}
           </div>
 
-          {/* Grade de 4 métricas resumidas */}
-          <div className="grid grid-cols-4 gap-3">
+          {/* Grade de 5 métricas resumidas */}
+          <div className="grid grid-cols-5 gap-3">
             <div>
-              <p className="text-[#7a8099] text-xs mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>
-                PA Pré
-              </p>
-              {/* PA no formato "SIS/DIA" */}
-              <p
-                className="text-[#e8eaf0]"
-                style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}
-              >
-                {s.pre.systolic}/{s.pre.diastolic}
+              <p className="text-[#7a8099] text-xs mb-1">Vel. Média</p>
+              <p className="text-[#00e5ff]" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
+                {s.during.speed} <span className="text-[#7a8099]">km/h</span>
               </p>
             </div>
             <div>
@@ -132,7 +128,7 @@ export function SessionHistory({ sessions, onSelect }: SessionHistoryProps) {
               </p>
               {/* BPM de pico em laranja — indica esforço máximo atingido */}
               <p
-                className="text-[#ff5733]"
+                className="text-[#ff3131]"
                 style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}
               >
                 {s.during.bpm}
