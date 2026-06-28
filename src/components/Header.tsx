@@ -11,12 +11,12 @@ export function Header({ page, setPage }: HeaderProps) {
   return (
     <header className="border-b border-[rgba(0,229,255,0.08)] px-4 py-4 flex items-center justify-between max-w-lg mx-auto">
       <div className="flex items-center gap-2">
-        <img src="/icon.png" alt="FlowHeart" className="w-8 h-8 rounded-lg object-contain" />
+        <img src="/icon.png" alt="FlowHeart" className="w-10 h-10 rounded-lg object-contain" />
         <div>
-          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1 }}>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.5rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1 }}>
             FLOW<span className="text-[#ff3131]">HEART</span>
           </p>
-          <p className="text-[#3a3f52]" style={{ fontSize: "0.6rem", letterSpacing: "0.1em" }}>BIKE TRAINING TRACKER</p>
+          <p className="font-bold" style={{ fontSize: "0.6rem", letterSpacing: "0.1em" }}>BIKE TRAINING TRACKER</p>
         </div>
       </div>
       <nav className="flex gap-1">

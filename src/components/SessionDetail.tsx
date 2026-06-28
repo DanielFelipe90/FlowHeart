@@ -205,7 +205,7 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
   ];
 
   return (
-    <div>
+    <div className="space-y-6 flex flex-col justify-center min-h-[70vh]">
       {/* Botão de voltar ao histórico */}
       <button
         onClick={onBack}
@@ -258,7 +258,7 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
               Distância
             </span>
           </div>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "1.6rem", fontWeight: 700, color: "#00e5ff", lineHeight: 1.1 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "clamp(0.9rem, 5vw, 1.6rem)", fontWeight: 700, color: "#00e5ff", lineHeight: 1.1 }}>
             {session.during.distance}
             <span className="text-[#7a8099] text-sm ml-1">km</span>
           </p>
@@ -271,7 +271,7 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
               Duração
             </span>
           </div>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "1.6rem", fontWeight: 700, color: "#e8eaf0", lineHeight: 1.1 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "clamp(0.9rem, 4vw, 1.6rem)", fontWeight: 700, color: "#e8eaf0", lineHeight: 1.1 }}>
             {fmtTime(session.during.timeSeconds)}
           </p>
         </div>
@@ -283,7 +283,7 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
               Vel. Média
             </span>
           </div>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "1.6rem", fontWeight: 700, color: "#ff5733", lineHeight: 1.1 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "clamp(0.9rem, 3vw, 1.6rem)", fontWeight: 700, color: "#ff5733", lineHeight: 1.1 }}>
             {session.during.speed}
             <span className="text-[#7a8099] text-sm ml-1">km/h</span>
           </p>
@@ -313,7 +313,7 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
       </div>
 
       {/* Tabela por fase: Pré / Durante / Pós com PA, BPM e IHB */}
-      <div className="space-y-2" style={{ paddingBottom: "2rem" }}>
+      <div className="space-y-2" style={{ paddingBottom: "0.5rem" }}>
         {/*
          * Cada objeto da lista define uma fase.
          * `ihb: null` na fase "Durante" oculta o campo IHB (não é coletado

@@ -76,17 +76,6 @@ export function HomePage({ userName, sessions, setPage, startNewWorkout }: HomeP
         );
       })()}
 
-      {sessions.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-10 text-center">
-          <p className="text-[#7a8099] text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
-            Nenhum treino registrado ainda.
-          </p>
-          <p className="text-[#3a3f52] text-xs mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>
-            Comece um novo treino para ver o histórico aqui.
-          </p>
-        </div>
-      )}
-
       {sessions.length > 0 && (
         <button
           onClick={() => setPage({ tag: "history" })}

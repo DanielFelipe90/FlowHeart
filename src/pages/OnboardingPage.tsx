@@ -11,7 +11,7 @@ interface OnboardingPageProps {
 export function OnboardingPage({ userName, setUserName, setPage }: OnboardingPageProps) {
   return (
     <div className="flex flex-col justify-center min-h-[70vh]">
-      <div className="flex flex-col items-center gap-6 m-6">
+      <div className="flex flex-col items-center gap-6 m-4">
         <img src="/icon.png" alt="FlowHeart" className="w-30 h-30 rounded-lg object-contain" />
       </div>
 
@@ -50,7 +50,10 @@ export function OnboardingPage({ userName, setUserName, setPage }: OnboardingPag
             autoComplete="name"
             placeholder="Seu nome"
             value={userName}
-            onChange={(e) => setUserName(e.target.value)}
+            onChange={(e) => {
+              const onlyLetters = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
+              setUserName(onlyLetters);
+            }}
             className="w-full rounded-xl border border-[rgba(0,229,255,0.12)] bg-[#1e2330] px-4 py-3 text-[#e8eaf0] outline-none focus:border-[#00e5ff] transition-all"
             style={{ fontFamily: "'Inter', sans-serif" }}
           />
