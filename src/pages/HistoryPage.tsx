@@ -1,5 +1,5 @@
-import { SessionHistory, type WorkoutSession } from "../components/SessionHistory";
-import type { AppPage } from "../app/App";
+import { SessionHistory } from "../components/SessionHistory";
+import type { WorkoutSession, AppPage } from "../types";
 
 interface HistoryPageProps {
   sessions: WorkoutSession[];

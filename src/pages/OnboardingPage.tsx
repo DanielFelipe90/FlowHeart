@@ -1,6 +1,4 @@
-// src/pages/OnboardingPage.tsx
-
-import type { AppPage } from "../app/App";
+import type { AppPage } from "../types";
 
 interface OnboardingPageProps {
   userName: string;
@@ -16,15 +14,7 @@ export function OnboardingPage({ userName, setUserName, setPage }: OnboardingPag
       </div>
 
       <div className="mb-8">
-        <h1
-          style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontSize: "2.5rem",
-            fontWeight: 800,
-            color: "#e8eaf0",
-            lineHeight: 1.05,
-          }}
-        >
+        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2.5rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1.05 }}>
           BEM-VINDO AO<br />
           <span className="text-[#00e5ff]">FLOW</span>
           <span className="text-[#ff3131]">HEART</span>
@@ -36,11 +26,7 @@ export function OnboardingPage({ userName, setUserName, setPage }: OnboardingPag
 
       <div className="space-y-4">
         <div>
-          <label
-            htmlFor="userName"
-            className="text-[#7a8099] text-xs uppercase tracking-widest mb-2 block"
-            style={{ fontFamily: "'Inter', sans-serif" }}
-          >
+          <label htmlFor="userName" className="text-[#7a8099] text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
             Como podemos te chamar?
           </label>
           <input
@@ -65,14 +51,7 @@ export function OnboardingPage({ userName, setUserName, setPage }: OnboardingPag
           className="w-full rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
           style={{ background: "linear-gradient(135deg, #00e5ff 0%, #00b8cc 100%)", color: "#0d0f14" }}
         >
-          <span
-            style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: "1.1rem",
-              fontWeight: 700,
-              letterSpacing: "0.05em",
-            }}
-          >
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
             COMEÇAR
           </span>
         </button>

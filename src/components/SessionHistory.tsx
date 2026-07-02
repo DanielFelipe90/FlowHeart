@@ -1,47 +1,18 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Calendar, Bike } from "lucide-react";
+import type { WorkoutSession } from "../types";
+
 /*
  * SessionHistory.tsx — Lista de sessões de treino registradas
  *
  * Exibe todas as sessões em ordem cronológica inversa (mais recente no topo).
- * Cada card resume os quatro indicadores principais: PA Pré, BPM Pico,
+ * Cada card resume os indicadores principais: Vel. Média, BPM Pico,
  * Distância e Duração. Um badge vermelho "IHB" aparece se algum
  * batimento irregular foi detectado no pré ou pós-treino da sessão.
  *
- * Estado vazio:
- *  Quando não há sessões, exibe uma mensagem de boas-vindas com ícone
- *  de bicicleta, encorajando o primeiro registro.
- *
  * Props:
  *  sessions  — array de todas as sessões salvas
- *  onSelect  — callback disparado ao clicar em um card; recebe a sessão
- *              clicada para que o pai navegue para a tela de detalhe
+ *  onSelect  — callback disparado ao clicar em um card
  */
-
-import { Calendar, Bike } from "lucide-react";
-
-/*
- * WorkoutSession — tipo central de dados do app.
- * Exportado daqui pois SessionHistory é o ponto de entrada
- * onde a estrutura é mais completamente utilizada.
- *
- * Estrutura:
- *  id          — identificador único (Date.now().toString() em runtime)
- *  date        — string formatada "DD/MM/AAAA — HH:MM"
- *  pre         — métricas capturadas ANTES do treino
- *  during      — métricas capturadas DURANTE o treino (inclui distância e tempo)
- *  post        — métricas capturadas APÓS o treino
- *
- * Todos os valores numéricos são armazenados como string porque vêm
- * diretamente de <input type="number"> sem conversão — a conversão
- * para Number() ocorre apenas nos gráficos (SessionDetail).
- */
-export interface WorkoutSession {
-  id: string;
-  date: string;
-  pre: { systolic: string; diastolic: string; bpm: string; ihb: boolean };
-  during: { systolic: string; diastolic: string; bpm: string; distance: string; timeSeconds: number; speed: string; };
-  post: { systolic: string; diastolic: string; bpm: string; ihb: boolean };
-}
 
 interface SessionHistoryProps {
   sessions: WorkoutSession[];
@@ -50,10 +21,6 @@ interface SessionHistoryProps {
 
 /*
  * fmtTime — Formata segundos em texto legível para o card do histórico
- * Usa o formato "Xh Ym" para treinos longos ou "Xm Ys" para curtos,
- * diferente do formato "MM:SS" do cronômetro ativo — aqui o objetivo
- * é leitura rápida, não precisão de segundo.
- *
  * Exemplos:
  *  2700  →  "45m 0s"
  *  3661  →  "1h 1m"
@@ -114,8 +81,8 @@ export function SessionHistory({ sessions, onSelect }: SessionHistoryProps) {
             )}
           </div>
 
-          {/* Grade de 5 métricas resumidas */}
-          <div className="grid grid-cols-5 gap-3">
+          {/* Grade de métricas resumidas */}
+          <div className="grid grid-cols-4 gap-3">
             <div>
               <p className="text-[#7a8099] text-xs mb-1">Vel. Média</p>
               <p className="text-[#00e5ff]" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
@@ -123,36 +90,20 @@ export function SessionHistory({ sessions, onSelect }: SessionHistoryProps) {
               </p>
             </div>
             <div>
-              <p className="text-[#7a8099] text-xs mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>
-                BPM Pico
-              </p>
-              {/* BPM de pico em laranja — indica esforço máximo atingido */}
-              <p
-                className="text-[#ff3131]"
-                style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}
-              >
+              <p className="text-[#7a8099] text-xs mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>BPM Pico</p>
+              <p className="text-[#ff3131]" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
                 {s.during.bpm}
               </p>
             </div>
             <div>
-              <p className="text-[#7a8099] text-xs mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>
-                Distância
-              </p>
-              <p
-                className="text-[#00e5ff]"
-                style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}
-              >
+              <p className="text-[#7a8099] text-xs mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>Distância</p>
+              <p className="text-[#00e5ff]" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
                 {s.during.distance} km
               </p>
             </div>
             <div>
-              <p className="text-[#7a8099] text-xs mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>
-                Duração
-              </p>
-              <p
-                className="text-[#e8eaf0]"
-                style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}
-              >
+              <p className="text-[#7a8099] text-xs mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>Duração</p>
+              <p className="text-[#e8eaf0]" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
                 {fmtTime(s.during.timeSeconds)}
               </p>
             </div>

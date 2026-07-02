@@ -31,7 +31,7 @@ import { AlertCircle } from "lucide-react";
 
 import { useRef, useState, useEffect } from "react";
 import { ArrowLeft, Clock, Bike } from "lucide-react";
-import type { WorkoutSession } from "./SessionHistory";
+import type { WorkoutSession } from "../types";
 
 interface SessionDetailProps {
   session: WorkoutSession;

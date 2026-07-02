@@ -2,7 +2,7 @@ import { Activity, Bike, ChevronRight, CheckCircle2, AlertCircle } from "lucide-
 import { MetricInput } from "../components/MetricInput";
 import { BloodPressureInput } from "../components/BloodPressureInput";
 import { WorkoutTimer } from "../components/WorkoutTimer";
-import type { AppPage, Phase, PreState, DuringState, PostState } from "../app/App";
+import type { AppPage, Phase, PreState, DuringState, PostState } from "../types";
 
 interface WorkoutPageProps {
     phase: Phase;

@@ -1,5 +1,5 @@
 import { SessionDetail } from "../components/SessionDetail";
-import type { WorkoutSession } from "../components/SessionHistory";
+import type { WorkoutSession } from "../types";
 
 interface DetailPageProps {
   session: WorkoutSession;

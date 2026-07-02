@@ -1,6 +1,5 @@
 import { Plus, ChevronRight } from "lucide-react";
-import type { AppPage } from "../app/App";
-import type { WorkoutSession } from "../components/SessionHistory";
+import type { AppPage, WorkoutSession } from "../types";
 
 interface HomePageProps {
   userName: string;
