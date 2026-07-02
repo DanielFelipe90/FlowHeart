@@ -1,0 +1,20 @@
+{
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "PKief.material-icon-theme",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "usernamehw.errorlens"
+      ],
+      "settings": {
+        "workbench.iconTheme": "material-icon-theme",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  }
+}
