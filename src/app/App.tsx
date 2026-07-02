@@ -71,10 +71,10 @@ export default function App() {
       className="min-h-screen w-full"
       style={{ background: "#0d0f14", fontFamily: "'Inter', sans-serif" }}
     >
-      {/* Header: oculto no onboarding para dar foco ao formulário de boas-vindas */}
-      {page.tag !== "onboarding" && (
+      {/* Header: oculto no onboarding, register e login */}
+      {page.tag !== "onboarding" && page.tag !== "register" && page.tag !== "login" ? (
         <Header page={page} setPage={(p) => navigate(setPage, p)} />
-      )}
+      ) : null}
 
       <main className="max-w-lg mx-auto px-4 py-6">
         {/* Onboarding: primeira visita ou sem nome salvo */}
@@ -141,7 +141,7 @@ export default function App() {
       </main>
 
       {/* Footer: visível apenas nas páginas iniciais */}
-      {(page.tag === "onboarding" || page.tag === "home") && <Footer />}
+      {(page.tag === "onboarding" || page.tag === "home" || page.tag === "register" || page.tag === "login") && <Footer />}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import type { AppPage } from "../app/App";
+import type { AppPage } from "../types/index";
 
 interface HeaderProps {
   page: AppPage;

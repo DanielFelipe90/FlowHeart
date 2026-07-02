@@ -53,16 +53,15 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
   };
 
   return (
-    <div className="flex flex-col justify-center min-h-[70vh]">
-      <div className="flex flex-col items-center gap-6 m-4">
-        <img src="/icon.png" alt="FlowHeart" className="w-30 h-30 rounded-lg object-contain" />
-      </div>
+    <div className="flex flex-col justify-center min-h-[70vh] pb-24">
 
       <div className="mb-8">
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2.5rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1.05 }}>
-          ENTRAR NO<br />
           <span className="text-[#00e5ff]">FLOW</span>
           <span className="text-[#ff3131]">HEART</span>
+          <br />
+          <br />
+          ENTRAR
         </h1>
         <p className="text-[#7a8099] mt-2 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
           Insira seus dados para continuar.
@@ -77,7 +76,7 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
           <input
             type="text"
             autoComplete="name"
-            placeholder="Seu nome"
+            placeholder="Digite seu nome"
             value={name}
             onChange={(e) => setName(e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, ""))}
             className="w-full rounded-xl border border-[rgba(0,229,255,0.12)] bg-[#1e2330] px-4 py-3 text-[#e8eaf0] outline-none focus:border-[#00e5ff] transition-all"
@@ -115,7 +114,7 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
           </span>
         </button>
 
-        <button onClick={onBack} className="w-full text-center text-[#7a8099] text-sm hover:text-[#e8eaf0] transition-colors">
+        <button onClick={onBack} className="w-full rounded-xl py-4 flex items-center justify-center border border-[rgba(0,229,255,0.12)] text-[#7a8099] hover:text-[#e8eaf0] hover:border-[rgba(0,229,255,0.3)] transition-all">
           Voltar
         </button>
       </div>

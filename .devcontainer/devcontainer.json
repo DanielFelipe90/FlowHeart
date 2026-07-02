@@ -11,6 +11,7 @@
         "usernamehw.errorlens"
       ],
       "settings": {
+        "npm.packageManager": "pnpm",
         "workbench.iconTheme": "material-icon-theme",
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode"
