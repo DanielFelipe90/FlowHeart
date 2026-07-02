@@ -1,12 +1,11 @@
 import type { AppPage } from "../types";
+import { isRegistered } from "../utils/storage";
 
 interface OnboardingPageProps {
-  userName: string;
-  setUserName: (name: string) => void;
   setPage: (page: AppPage) => void;
 }
 
-export function OnboardingPage({ userName, setUserName, setPage }: OnboardingPageProps) {
+export function OnboardingPage({ setPage }: OnboardingPageProps) {
   return (
     <div className="flex flex-col justify-center min-h-[70vh]">
       <div className="flex flex-col items-center gap-6 m-4">
@@ -24,37 +23,27 @@ export function OnboardingPage({ userName, setUserName, setPage }: OnboardingPag
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="userName" className="text-[#7a8099] text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
-            Como podemos te chamar?
-          </label>
-          <input
-            id="userName"
-            name="userName"
-            type="text"
-            autoComplete="name"
-            placeholder="Seu nome"
-            value={userName}
-            onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
-              setUserName(onlyLetters);
-            }}
-            className="w-full rounded-xl border border-[rgba(0,229,255,0.12)] bg-[#1e2330] px-4 py-3 text-[#e8eaf0] outline-none focus:border-[#00e5ff] transition-all"
-            style={{ fontFamily: "'Inter', sans-serif" }}
-          />
-        </div>
-
+      <div className="space-y-3">
         <button
-          disabled={!userName.trim()}
-          onClick={() => setPage({ tag: "home" })}
-          className="w-full rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+          onClick={() => setPage({ tag: "register" })}
+          className="w-full rounded-xl py-4 flex items-center justify-center transition-all hover:opacity-90"
           style={{ background: "linear-gradient(135deg, #00e5ff 0%, #00b8cc 100%)", color: "#0d0f14" }}
         >
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
-            COMEÇAR
+            REGISTRAR
           </span>
         </button>
+
+        {isRegistered() && (
+          <button
+            onClick={() => setPage({ tag: "login" })}
+            className="w-full rounded-xl py-4 flex items-center justify-center border border-[rgba(0,229,255,0.12)] text-[#7a8099] hover:text-[#e8eaf0] hover:border-[rgba(0,229,255,0.3)] transition-all"
+          >
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
+              ENTRAR
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );

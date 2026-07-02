@@ -44,6 +44,8 @@ export interface WorkoutSession {
  */
 export type AppPage =
   | { tag: "onboarding" }
+  | { tag: "register" }
+  | { tag: "login" }
   | { tag: "home" }
   | { tag: "workout"; phase: Phase }
   | { tag: "history" }

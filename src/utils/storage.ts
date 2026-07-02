@@ -1,8 +1,8 @@
 // ─── Chaves do localStorage ───────────────────────────────────────────────────
 // Centralizadas aqui para evitar typos e facilitar migração futura para backend.
-
 const STORAGE_KEY = "flowheart_sessions";
 const USERNAME_KEY = "flowheart_username";
+const PASSWORD_KEY = "flowheart_password";
 
 // ─── Sessões ──────────────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ export function loadSessions(): unknown[] {
 
 /**
  * Salva o nome do usuário no localStorage.
- * Chamado uma vez no onboarding ao confirmar o nome.
+ * Chamado no registro ao confirmar o nome.
  */
 export function saveUserName(name: string) {
   localStorage.setItem(USERNAME_KEY, name);
@@ -41,8 +41,35 @@ export function saveUserName(name: string) {
 
 /**
  * Carrega o nome do usuário salvo.
- * Retorna string vazia se não houver nome — app redireciona para onboarding.
+ * Retorna string vazia se não houver nome cadastrado.
  */
 export function loadUserName(): string {
   return localStorage.getItem(USERNAME_KEY) ?? "";
+}
+
+// ─── Senha ────────────────────────────────────────────────────────────────────
+
+/**
+ * Salva a senha no localStorage.
+ * Futuramente substituir por hash (bcrypt) no backend —
+ * nunca armazenar senha em texto puro em produção.
+ */
+export function savePassword(password: string) {
+  localStorage.setItem(PASSWORD_KEY, password);
+}
+
+/**
+ * Carrega a senha salva.
+ * Retorna string vazia se não houver senha cadastrada.
+ */
+export function loadPassword(): string {
+  return localStorage.getItem(PASSWORD_KEY) ?? "";
+}
+
+/**
+ * Verifica se já existe um usuário cadastrado.
+ * Usado no OnboardingPage para decidir se exibe o botão "Entrar".
+ */
+export function isRegistered(): boolean {
+  return !!localStorage.getItem(USERNAME_KEY) && !!localStorage.getItem(PASSWORD_KEY);
 }

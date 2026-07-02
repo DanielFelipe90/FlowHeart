@@ -8,6 +8,8 @@ import { WorkoutPage } from "../pages/WorkoutPage";
 import { HistoryPage } from "../pages/HistoryPage";
 import { DetailPage } from "../pages/DetailPage";
 import { useWorkout } from "../hooks/useWorkout";
+import { RegisterPage } from "../pages/RegisterPage";
+import { LoginPage } from "../pages/LoginPage";
 
 // ─── Helper de navegação ──────────────────────────────────────────────────────
 
@@ -27,7 +29,6 @@ function navigate(setPage: (p: AppPage) => void, page: AppPage) {
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function App() {
-
   // Estado de navegação — começa no onboarding
   const [page, setPage] = useState<AppPage>({ tag: "onboarding" });
 
@@ -35,9 +36,12 @@ export default function App() {
   const {
     sessions,
     userName,
-    pre, setPre,
-    during, setDuring,
-    post, setPost,
+    pre,
+    setPre,
+    during,
+    setDuring,
+    post,
+    setPost,
     handleSetUserName,
     startNewWorkout,
     saveSession,
@@ -73,14 +77,9 @@ export default function App() {
       )}
 
       <main className="max-w-lg mx-auto px-4 py-6">
-
         {/* Onboarding: primeira visita ou sem nome salvo */}
         {page.tag === "onboarding" && (
-          <OnboardingPage
-            userName={userName}
-            setUserName={handleSetUserName}
-            setPage={(p) => navigate(setPage, p)}
-          />
+          <OnboardingPage setPage={(p) => navigate(setPage, p)} />
         )}
 
         {/* Home: resumo do último treino e acesso às ações principais */}
@@ -97,9 +96,12 @@ export default function App() {
         {page.tag === "workout" && (
           <WorkoutPage
             phase={page.phase}
-            pre={pre} setPre={setPre}
-            during={during} setDuring={setDuring}
-            post={post} setPost={setPost}
+            pre={pre}
+            setPre={setPre}
+            during={during}
+            setDuring={setDuring}
+            post={post}
+            setPost={setPost}
             setPage={(p) => navigate(setPage, p)}
             saveSession={handleSaveAndNavigate}
           />
@@ -121,12 +123,25 @@ export default function App() {
           />
         )}
 
+        {page.tag === "register" && (
+          <RegisterPage
+            setUserName={handleSetUserName}
+            setPage={(p) => navigate(setPage, p)}
+            onBack={() => navigate(setPage, { tag: "onboarding" })}
+          />
+        )}
+
+        {page.tag === "login" && (
+          <LoginPage
+            setUserName={handleSetUserName}
+            setPage={(p) => navigate(setPage, p)}
+            onBack={() => navigate(setPage, { tag: "onboarding" })}
+          />
+        )}
       </main>
 
       {/* Footer: visível apenas nas páginas iniciais */}
-      {(page.tag === "onboarding" || page.tag === "home") && (
-        <Footer />
-      )}
+      {(page.tag === "onboarding" || page.tag === "home") && <Footer />}
     </div>
   );
 }
