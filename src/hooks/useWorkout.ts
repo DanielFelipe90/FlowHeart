@@ -1,41 +1,49 @@
 import { useState, useEffect } from "react";
-import { saveSessions, loadSessions, saveUserName, loadUserName } from "../utils/storage";
-import type { WorkoutSession, PreState, DuringState, PostState } from "../types";
+import {
+  saveSessions,
+  loadSessions,
+  saveUserName,
+  loadUserName,
+} from "../utils/storage";
+import type {
+  WorkoutSession,
+  PreState,
+  DuringState,
+  PostState,
+} from "../types";
 
 /**
  * useWorkout — Hook central de lógica de negócio do FlowHeart
  *
  * Encapsula:
  * - Estados de sessões, nome do usuário e fases do treino
- * - Persistência automática no localStorage
- * - Ações: iniciar treino, salvar sessão, atualizar nome
+ * - Persistência automática no localStorage por usuário
+ * - Ações: iniciar treino, salvar sessão, atualizar nome, logout
  *
  * A navegação entre páginas é responsabilidade do App.tsx —
  * este hook não conhece rotas nem componentes de UI.
  */
 export function useWorkout() {
-
   // ── Estado persistido ──────────────────────────────────────────────────
-
-  /**
-   * Sessões carregadas do localStorage na inicialização.
-   * O cast é seguro pois saveSessions() sempre serializa
-   * objetos com a mesma estrutura de WorkoutSession.
-   */
-  const [sessions, setSessions] = useState<WorkoutSession[]>(
-    () => loadSessions() as WorkoutSession[]
-  );
 
   /** Nome do usuário carregado do localStorage */
   const [userName, setUserName] = useState<string>(() => loadUserName());
 
   /**
-   * Persiste as sessões no localStorage sempre que o array mudar.
-   * Dispara após cada treino adicionado.
+   * Sessões carregadas do localStorage na inicialização.
+   * Usa o nome do usuário como chave para separar dados entre usuários.
+   */
+  const [sessions, setSessions] = useState<WorkoutSession[]>(
+    () => loadSessions(loadUserName()) as WorkoutSession[]
+  );
+
+  /**
+   * Persiste as sessões no localStorage sempre que o array ou o usuário mudar.
+   * Só salva se houver um usuário logado — evita salvar sessão vazia no logout.
    */
   useEffect(() => {
-    saveSessions(sessions);
-  }, [sessions]);
+    if (userName) saveSessions(sessions, userName);
+  }, [sessions, userName]);
 
   // ── Estado temporário do treino em andamento ───────────────────────────
   // Todos resetados em startNewWorkout() antes de cada nova sessão.
@@ -67,11 +75,13 @@ export function useWorkout() {
 
   /**
    * Salva o nome no estado e no localStorage.
-   * Chamada no onboarding ao confirmar o nome.
+   * Também carrega as sessões do novo usuário ao logar.
    */
   function handleSetUserName(name: string) {
     setUserName(name);
     saveUserName(name);
+    // Carrega as sessões do usuário que acabou de logar/registrar
+    setSessions(loadSessions(name) as WorkoutSession[]);
   }
 
   /**
@@ -80,7 +90,14 @@ export function useWorkout() {
    */
   function startNewWorkout() {
     setPre({ systolic: "", diastolic: "", bpm: "", ihb: false });
-    setDuring({ systolic: "", diastolic: "", bpm: "", distance: "", timeSeconds: 0, speed: "" });
+    setDuring({
+      systolic: "",
+      diastolic: "",
+      bpm: "",
+      distance: "",
+      timeSeconds: 0,
+      speed: "",
+    });
     setPost({ systolic: "", diastolic: "", bpm: "", ihb: false });
   }
 
@@ -104,8 +121,24 @@ export function useWorkout() {
 
     setSessions((s) => [
       ...s,
-      { id: Date.now().toString(), date, pre, during: { ...during, speed }, post },
+      {
+        id: Date.now().toString(),
+        date,
+        pre,
+        during: { ...during, speed },
+        post,
+      },
     ]);
+  }
+
+  /**
+   * Desloga o usuário sem apagar os dados.
+   * Limpa apenas o estado — localStorage permanece intacto.
+   * A navegação para onboarding é feita pelo App após chamar esta função.
+   */
+  function logout() {
+    setUserName("");
+    setSessions([]);
   }
 
   return {
@@ -117,5 +150,6 @@ export function useWorkout() {
     handleSetUserName,
     startNewWorkout,
     saveSession,
+    logout,
   };
 }

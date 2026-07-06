@@ -10,14 +10,8 @@ import { DetailPage } from "../pages/DetailPage";
 import { useWorkout } from "../hooks/useWorkout";
 import { RegisterPage } from "../pages/RegisterPage";
 import { LoginPage } from "../pages/LoginPage";
+import { PerfilPage } from "../pages/PerfilPage";
 
-// ─── Helper de navegação ──────────────────────────────────────────────────────
-
-/**
- * Navega para uma nova página aplicando a View Transitions API quando disponível.
- * O fallback garante compatibilidade com browsers que não suportam a API.
- * A animação (slide) é definida no index.css via ::view-transition-old/new.
- */
 function navigate(setPage: (p: AppPage) => void, page: AppPage) {
   if (!document.startViewTransition) {
     setPage(page);
@@ -26,41 +20,26 @@ function navigate(setPage: (p: AppPage) => void, page: AppPage) {
   document.startViewTransition(() => setPage(page));
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
-
 export default function App() {
-  // Estado de navegação — começa no onboarding
   const [page, setPage] = useState<AppPage>({ tag: "onboarding" });
 
-  // Consome toda a lógica de negócio e persistência do hook
   const {
     sessions,
     userName,
-    pre,
-    setPre,
-    during,
-    setDuring,
-    post,
-    setPost,
+    pre, setPre,
+    during, setDuring,
+    post, setPost,
     handleSetUserName,
     startNewWorkout,
     saveSession,
+    logout,
   } = useWorkout();
 
-  /**
-   * Inicia um novo treino: reseta os estados e navega para pré-treino.
-   * A navegação fica no App pois é responsabilidade de roteamento,
-   * não de lógica de negócio.
-   */
   const handleStartWorkout = () => {
     startNewWorkout();
     navigate(setPage, { tag: "workout", phase: "pre" });
   };
 
-  /**
-   * Salva a sessão e navega para o histórico.
-   * Separa o save (lógica) da navegação (roteamento).
-   */
   const handleSaveAndNavigate = () => {
     saveSession();
     navigate(setPage, { tag: "history" });
@@ -71,18 +50,25 @@ export default function App() {
       className="min-h-screen w-full"
       style={{ background: "#0d0f14", fontFamily: "'Inter', sans-serif" }}
     >
-      {/* Header: oculto no onboarding, register e login */}
-      {page.tag !== "onboarding" && page.tag !== "register" && page.tag !== "login" ? (
-        <Header page={page} setPage={(p) => navigate(setPage, p)} />
-      ) : null}
+      {page.tag !== "onboarding" &&
+        page.tag !== "register" &&
+        page.tag !== "login" && (
+          <Header
+            page={page}
+            setPage={(p) => navigate(setPage, p)}
+            userName={userName}
+            onLogout={() => {
+              logout();
+              navigate(setPage, { tag: "onboarding" });
+            }}
+          />
+        )}
 
       <main className="max-w-lg mx-auto px-4 py-6">
-        {/* Onboarding: primeira visita ou sem nome salvo */}
         {page.tag === "onboarding" && (
           <OnboardingPage setPage={(p) => navigate(setPage, p)} />
         )}
 
-        {/* Home: resumo do último treino e acesso às ações principais */}
         {page.tag === "home" && (
           <HomePage
             userName={userName}
@@ -92,22 +78,17 @@ export default function App() {
           />
         )}
 
-        {/* Workout: fluxo de 3 fases (pré → durante → pós) */}
         {page.tag === "workout" && (
           <WorkoutPage
             phase={page.phase}
-            pre={pre}
-            setPre={setPre}
-            during={during}
-            setDuring={setDuring}
-            post={post}
-            setPost={setPost}
+            pre={pre} setPre={setPre}
+            during={during} setDuring={setDuring}
+            post={post} setPost={setPost}
             setPage={(p) => navigate(setPage, p)}
             saveSession={handleSaveAndNavigate}
           />
         )}
 
-        {/* History: lista de todas as sessões em ordem cronológica inversa */}
         {page.tag === "history" && (
           <HistoryPage
             sessions={sessions}
@@ -115,7 +96,6 @@ export default function App() {
           />
         )}
 
-        {/* Detail: análise completa de uma sessão com gráficos */}
         {page.tag === "detail" && (
           <DetailPage
             session={page.session}
@@ -138,10 +118,15 @@ export default function App() {
             onBack={() => navigate(setPage, { tag: "onboarding" })}
           />
         )}
+
+        {page.tag === "perfil" && <PerfilPage userName={userName} />}
       </main>
 
-      {/* Footer: visível apenas nas páginas iniciais */}
-      {(page.tag === "onboarding" || page.tag === "home" || page.tag === "register" || page.tag === "login") && <Footer />}
+      {(page.tag === "onboarding" ||
+        page.tag === "home" ||
+        page.tag === "register" ||
+        page.tag === "login" ||
+        page.tag === "perfil") && <Footer />}
     </div>
   );
 }

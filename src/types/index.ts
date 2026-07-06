@@ -43,6 +43,7 @@ export interface WorkoutSession {
  * Cada variante carrega apenas os dados necessários para aquela tela.
  */
 export type AppPage =
+  | { tag: "perfil" }
   | { tag: "onboarding" }
   | { tag: "register" }
   | { tag: "login" }

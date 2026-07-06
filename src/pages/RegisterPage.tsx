@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import type { AppPage } from "../types";
-import { saveUserName, savePassword } from "../utils/storage";
+import { saveUser, saveUserName } from "../utils/storage";
 
 interface RegisterPageProps {
   setUserName: (name: string) => void;
@@ -49,8 +49,8 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
       setErrorMessage("As senhas não coincidem.");
       return;
     }
-    saveUserName(name);
-    savePassword(password);
+    saveUser(name, password);  // salva na lista de usuários
+    saveUserName(name);        // salva como último logado
     setUserName(name);
     setPage({ tag: "home" });
   };
@@ -61,8 +61,7 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2.5rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1.05 }}>
           <span className="text-[#00e5ff]">FLOW</span>
           <span className="text-[#ff3131]">HEART</span>
-          <br />
-          <br />
+          <br /><br />
           CRIE SUA CONTA...
         </h1>
         <p className="text-[#7a8099] mt-2 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -119,7 +118,10 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
           </span>
         </button>
 
-        <button onClick={onBack} className="w-full rounded-xl py-4 flex items-center justify-center border border-[rgba(0,229,255,0.12)] text-[#7a8099] hover:text-[#e8eaf0] hover:border-[rgba(0,229,255,0.3)] transition-all">
+        <button
+          onClick={onBack}
+          className="w-full rounded-xl py-4 flex items-center justify-center border border-[rgba(0,229,255,0.12)] text-[#7a8099] hover:text-[#e8eaf0] hover:border-[rgba(0,229,255,0.3)] transition-all"
+        >
           Voltar
         </button>
       </div>

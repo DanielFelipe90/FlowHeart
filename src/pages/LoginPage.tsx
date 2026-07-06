@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import type { AppPage } from "../types";
-import { loadPassword, loadUserName } from "../utils/storage";
+import { validateLogin, saveUserName } from "../utils/storage";
 
 interface LoginPageProps {
   setUserName: (name: string) => void;
@@ -40,28 +40,24 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
   const canLogin = name.trim() && password.length === 6;
 
   const handleLogin = () => {
-    const savedName = loadUserName();
-    const savedPassword = loadPassword();
-
-    if (name.toLowerCase() !== savedName.toLowerCase() || password !== savedPassword) {
+    const validName = validateLogin(name, password);
+    if (!validName) {
       setErrorMessage("Nome ou senha incorretos.");
       return;
     }
-
-    setUserName(savedName);
+    saveUserName(validName);
+    setUserName(validName);
     setPage({ tag: "home" });
   };
 
   return (
-    <div className="flex flex-col justify-center min-h-[70vh] pb-24">
-
+    <div className="flex flex-col justify-center min-h-[70vh] pb-14">
       <div className="mb-8">
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2.5rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1.05 }}>
           <span className="text-[#00e5ff]">FLOW</span>
           <span className="text-[#ff3131]">HEART</span>
-          <br />
-          <br />
-          ENTRAR
+          <br /><br />
+          ENTRAR NA CONTA...
         </h1>
         <p className="text-[#7a8099] mt-2 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
           Insira seus dados para continuar.
@@ -91,13 +87,15 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
           <PasswordInput value={password} onChange={setPassword} placeholder="Sua senha" />
         </div>
 
-        {/* Modal de erro inline */}
         {errorMessage && (
           <div className="rounded-xl border border-[#ff3131]/30 bg-[#ff3131]/10 p-4 flex items-center justify-between">
             <p className="text-[#ff3131] text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
               {errorMessage}
             </p>
-            <button onClick={() => setErrorMessage("")} className="text-[#ff3131] hover:opacity-70 transition-opacity ml-3">
+            <button
+              onClick={() => setErrorMessage("")}
+              className="text-[#ff3131] hover:opacity-70 transition-opacity ml-3"
+            >
               ✕
             </button>
           </div>
@@ -114,7 +112,10 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
           </span>
         </button>
 
-        <button onClick={onBack} className="w-full rounded-xl py-4 flex items-center justify-center border border-[rgba(0,229,255,0.12)] text-[#7a8099] hover:text-[#e8eaf0] hover:border-[rgba(0,229,255,0.3)] transition-all">
+        <button
+          onClick={onBack}
+          className="w-full rounded-xl py-4 flex items-center justify-center border border-[rgba(0,229,255,0.12)] text-[#7a8099] hover:text-[#e8eaf0] hover:border-[rgba(0,229,255,0.3)] transition-all"
+        >
           Voltar
         </button>
       </div>
