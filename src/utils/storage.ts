@@ -23,12 +23,15 @@ function loadUsers(): StoredUser[] {
  * Salva um novo usuário ou atualiza um existente.
  */
 export function saveUser(name: string, password: string): void {
+  const safeName = name.replace(/[^a-zA-ZÀ-ÿ\s]/g, "").trim();
+  if (!safeName || password.length !== 6) return;
+
   const users = loadUsers();
-  const index = users.findIndex((u) => u.name.toLowerCase() === name.toLowerCase().trim());
+  const index = users.findIndex((u) => u.name.toLowerCase() === safeName.toLowerCase());
   if (index >= 0) {
     users[index].password = password;
   } else {
-    users.push({ name: name.trim(), password });
+    users.push({ name: safeName, password });
   }
   localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(users));
 }

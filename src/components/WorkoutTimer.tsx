@@ -42,22 +42,21 @@ export function WorkoutTimer({ onTimeChange }: WorkoutTimerProps) {
   useEffect(() => {
     if (running) {
       intervalRef.current = setInterval(() => {
-        setSeconds((s) => {
-          const next = s + 1;
-          // Notifica o pai com o novo total a cada segundo
-          onTimeChange(next);
-          return next;
-        });
+        setSeconds((s) => s + 1); // apenas atualiza o estado local
       }, 1000);
     } else {
-      // Para o intervalo quando pausado
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
-    // Cleanup: cancela o intervalo se o componente desmontar enquanto rodando
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [running]);
+
+  // useEffect separado — notifica o pai quando seconds mudar
+  // evita chamar onTimeChange durante a atualização de estado do timer
+  useEffect(() => {
+    onTimeChange(seconds);
+  }, [seconds]);
 
   /*
    * fmt — Formata segundos totais em string legível
@@ -77,7 +76,6 @@ export function WorkoutTimer({ onTimeChange }: WorkoutTimerProps) {
   const reset = () => {
     setRunning(false);
     setSeconds(0);
-    onTimeChange(0);
   };
 
   return (
