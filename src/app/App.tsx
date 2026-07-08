@@ -100,6 +100,7 @@ export default function App() {
           <HistoryPage
             sessions={sessions}
             setPage={(p) => navigate(setPage, p)}
+            onBack={() => navigate(setPage, { tag: "home" })}
           />
         )}
 
