@@ -27,7 +27,7 @@ export function Header({ page, setPage, userName, onLogout }: HeaderProps) {
         </div>
         <button
           onClick={() => setDrawerOpen(true)}
-          className="text-[#7a8099] hover:text-[#e8eaf0] transition-colors p-2 rounded-lg hover:bg-[#1e2330]"
+          className="text-[#7a8099] hover:text-[#00e5ff] transition-colors p-2 rounded-lg hover:bg-[#1e2330]"
         >
           <Menu size={22} />
         </button>

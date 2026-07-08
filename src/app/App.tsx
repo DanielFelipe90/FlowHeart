@@ -11,6 +11,7 @@ import { useWorkout } from "../hooks/useWorkout";
 import { RegisterPage } from "../pages/RegisterPage";
 import { LoginPage } from "../pages/LoginPage";
 import { PerfilPage } from "../pages/PerfilPage";
+import { EstatisticasPage } from "../pages/EstatisticasPage";
 
 function navigate(setPage: (p: AppPage) => void, page: AppPage) {
   if (!document.startViewTransition) {
@@ -26,9 +27,12 @@ export default function App() {
   const {
     sessions,
     userName,
-    pre, setPre,
-    during, setDuring,
-    post, setPost,
+    pre,
+    setPre,
+    during,
+    setDuring,
+    post,
+    setPost,
     handleSetUserName,
     startNewWorkout,
     saveSession,
@@ -81,9 +85,12 @@ export default function App() {
         {page.tag === "workout" && (
           <WorkoutPage
             phase={page.phase}
-            pre={pre} setPre={setPre}
-            during={during} setDuring={setDuring}
-            post={post} setPost={setPost}
+            pre={pre}
+            setPre={setPre}
+            during={during}
+            setDuring={setDuring}
+            post={post}
+            setPost={setPost}
             setPage={(p) => navigate(setPage, p)}
             saveSession={handleSaveAndNavigate}
           />
@@ -120,6 +127,10 @@ export default function App() {
         )}
 
         {page.tag === "perfil" && <PerfilPage userName={userName} />}
+
+        {page.tag === "estatisticas" && (
+          <EstatisticasPage sessions={sessions} />
+        )}
       </main>
 
       {(page.tag === "onboarding" ||

@@ -1,4 +1,4 @@
-import { Home, History, User, LogOut } from "lucide-react";
+import { Home, History, User, LogOut, BarChart2 } from "lucide-react";
 import type { AppPage } from "../types";
 
 
@@ -14,6 +14,7 @@ interface DrawerProps {
 const navItems = [
   { tag: "home" as const, label: "Início", icon: Home },
   { tag: "history" as const, label: "Histórico", icon: History },
+  { tag: "estatisticas" as const, label: "Estatísticas", icon: BarChart2 },
   { tag: "perfil" as const, label: "Perfil", icon: User },
 ];
 
@@ -54,7 +55,7 @@ export function Drawer({ isOpen, onClose, page, setPage, onLogout }: DrawerProps
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left w-full ${
                   isActive
                     ? "bg-[rgba(0,229,255,0.08)] text-[#00e5ff]"
-                    : "text-[#7a8099] hover:text-[#e8eaf0]"
+                    : "text-[#7a8099] hover:text-[#00e5ff]"
                 }`}
               >
                 <Icon size={18} />

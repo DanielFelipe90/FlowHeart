@@ -29,9 +29,9 @@ import { AlertCircle } from "lucide-react";
  *  onBack  — callback para retornar ao histórico
  */
 
-import { useRef, useState, useEffect } from "react";
 import { ArrowLeft, Clock, Bike } from "lucide-react";
 import type { WorkoutSession } from "../types";
+import { SimpleLineChart, useContainerWidth } from "./SimpleLineChart";
 
 interface SessionDetailProps {
   session: WorkoutSession;
@@ -49,145 +49,6 @@ function fmtTime(s: number) {
   const sec = s % 60;
   if (h > 0) return `${h}h ${m}m`;
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-}
-
-/*
- * useContainerWidth — Hook que mede a largura real de um elemento DOM
- *
- * Usa ResizeObserver para reagir a mudanças de layout (rotação de tela,
- * redimensionamento de janela). Retorna um ref para anexar ao container
- * e o width atual em pixels.
- *
- * O gráfico só é renderizado quando width > 0, evitando que o SVG
- * seja criado com dimensões inválidas antes do primeiro layout.
- */
-function useContainerWidth() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(0);
-  useEffect(() => {
-    if (!ref.current) return;
-    const ro = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    ro.observe(ref.current);
-    return () => ro.disconnect(); // cleanup ao desmontar
-  }, []);
-  return { ref, width };
-}
-
-/*
- * SimpleLineChart — Gráfico de linha em SVG puro
- *
- * Recebe uma ou mais séries de dados (arrays de números) e as plota como
- * polylines sobre um eixo X de rótulos fixos e eixo Y calculado
- * automaticamente a partir dos valores mínimo e máximo.
- *
- * Props:
- *  id      — prefixo único para as keys SVG (ex: "bpm", "pa")
- *            Garante que dois gráficos na mesma tela não conflitem
- *  width   — largura total do SVG em px (vem do useContainerWidth)
- *  height  — altura total do SVG em px
- *  labels  — rótulos do eixo X (ex: ["Pré", "Durante", "Pós"])
- *  series  — array de séries; cada série tem:
- *    values  — array de números (um por label)
- *    color   — cor hex da linha e dos pontos
- *    dashed  — true para linha tracejada (ex: diastólica)
- *
- * Cálculo do eixo Y:
- *  - min/max são calculados de todos os valores de todas as séries
- *  - Um padding de 20% é adicionado acima e abaixo para evitar que
- *    os pontos fiquem colados nas bordas do gráfico
- *  - 3 linhas de grade horizontais são geradas igualmente espaçadas
- */
-interface LineChartProps {
-  series: { values: number[]; color: string; dashed?: boolean }[];
-  labels: string[];
-  width: number;
-  height: number;
-  id: string;
-}
-
-function SimpleLineChart({ series, labels, width, height, id }: LineChartProps) {
-  // Margens internas do SVG — deixam espaço para labels e eixos
-  const PAD = { top: 12, right: 8, bottom: 28, left: 36 };
-  // Área útil de desenho após as margens
-  const W = width - PAD.left - PAD.right;
-  const H = height - PAD.top - PAD.bottom;
-  const n = labels.length; // número de pontos no eixo X
-
-  // Calcula domínio do eixo Y a partir de todos os valores presentes
-  const allVals = series.flatMap((s) => s.values).filter((v) => v > 0);
-  const minVal = allVals.length ? Math.min(...allVals) : 0;
-  const maxVal = allVals.length ? Math.max(...allVals) : 1;
-  const pad = (maxVal - minVal) * 0.2 || 10; // padding de 20% (mínimo 10)
-  const lo = Math.max(0, minVal - pad); // limite inferior (não vai abaixo de 0)
-  const hi = maxVal + pad;              // limite superior
-
-  // Converte índice X (0..n-1) para coordenada pixel horizontal
-  const x = (i: number) => PAD.left + (i / (n - 1)) * W;
-
-  // Converte valor Y para coordenada pixel vertical (invertida — SVG cresce para baixo)
-  const y = (v: number) => PAD.top + H - ((v - lo) / (hi - lo)) * H;
-
-  // 3 ticks igualmente espaçados no eixo Y para as linhas de grade
-  const ticks = 3;
-  const yTicks = Array.from({ length: ticks }, (_, i) => lo + ((hi - lo) * i) / (ticks - 1));
-
-  return (
-    <svg width={width} height={height} style={{ display: "block", overflow: "visible" }}>
-
-      {/* Linhas de grade horizontais + labels do eixo Y */}
-      {yTicks.map((t, i) => (
-        <g key={`ytick-${id}-${i}`}>
-          <line
-            x1={PAD.left} x2={PAD.left + W}
-            y1={y(t)} y2={y(t)}
-            stroke="rgba(0,229,255,0.06)" strokeWidth={1}
-          />
-          <text
-            x={PAD.left - 4} y={y(t) + 4}
-            textAnchor="end" fill="#7a8099"
-            fontSize={9} fontFamily="'JetBrains Mono', monospace"
-          >
-            {Math.round(t)}
-          </text>
-        </g>
-      ))}
-
-      {/* Labels do eixo X */}
-      {labels.map((label, i) => (
-        <text
-          key={`xlabel-${id}-${i}`}
-          x={x(i)} y={height - 6}
-          textAnchor="middle" fill="#7a8099"
-          fontSize={11} fontFamily="'Inter', sans-serif"
-        >
-          {label}
-        </text>
-      ))}
-
-      {/* Linhas e pontos de cada série de dados */}
-      {series.map((s, si) => {
-        // Gera a string "x1,y1 x2,y2 x3,y3" para o atributo points do polyline
-        const pts = s.values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
-        return (
-          <g key={`series-${id}-${si}`}>
-            <polyline
-              points={pts}
-              fill="none"
-              stroke={s.color}
-              strokeWidth={2.5}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              strokeDasharray={s.dashed ? "5 3" : undefined}
-            />
-            {/* Ponto circular em cada valor medido */}
-            {s.values.map((v, i) => (
-              <circle key={`dot-${id}-${si}-${i}`} cx={x(i)} cy={y(v)} r={5} fill={s.color} />
-            ))}
-          </g>
-        );
-      })}
-    </svg>
-  );
 }
 
 // Rótulos fixos do eixo X — correspondem às 3 fases de coleta de dados
