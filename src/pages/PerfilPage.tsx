@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { DeleteAccount } from "../components/DeleteAccount";
+import { ThemeToggle } from "../components/ThemeToggle";
+import { useTheme } from "../hooks/useTheme";
 
 interface PerfilPageProps {
   userName: string;
@@ -12,6 +14,8 @@ const AVATAR_COLORS = [
 ];
 
 export function PerfilPage({ userName, onDeleteAccount }: PerfilPageProps) {
+  const { theme, toggleTheme } = useTheme();
+
   const avatarColor = useMemo(() => {
     const index = userName.charCodeAt(0) % AVATAR_COLORS.length;
     return AVATAR_COLORS[index];
@@ -22,17 +26,20 @@ export function PerfilPage({ userName, onDeleteAccount }: PerfilPageProps) {
   return (
     <div className="space-y-6 flex flex-col min-h-[70vh]">
       <div className="space-y-4 flex flex-col items-center mb-8">
-        <h1
-          style={{
+        {/* Cabeçalho com título e botão de tema */}
+        <div className="flex items-center justify-between w-full">
+          <h1 style={{
             fontFamily: "'Barlow Condensed', sans-serif",
             fontSize: "2.5rem",
             fontWeight: 800,
             color: "#e8eaf0",
             lineHeight: 1.05,
-          }}
-        >
-          Perfil
-        </h1>
+          }}>
+            Perfil
+          </h1>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+        </div>
+
         <div
           className="flex justify-center items-center w-30 h-30 rounded-full mt-4"
           style={{ background: avatarColor }}
@@ -47,6 +54,7 @@ export function PerfilPage({ userName, onDeleteAccount }: PerfilPageProps) {
             {initials}
           </p>
         </div>
+
         <span className="text-[#ffffff]">
           {userName.toUpperCase()}
         </span>

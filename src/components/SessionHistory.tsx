@@ -23,11 +23,11 @@ export function SessionHistory({ sessions, onSelect, onDelete }: SessionHistoryP
   if (sessions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Bike size={48} className="text-[#2e3448] mb-4" />
-        <p className="text-[#7a8099]" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <Bike size={48} className="text-muted-foreground/30 mb-4" />
+        <p className="text-muted-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
           Nenhum treino registrado ainda.
         </p>
-        <p className="text-[#3a3f52] text-sm mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <p className="text-muted-foreground/60 text-sm mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>
           Comece um novo treino para ver o histórico aqui.
         </p>
       </div>
@@ -41,30 +41,29 @@ export function SessionHistory({ sessions, onSelect, onDelete }: SessionHistoryP
           <button
             key={s.id}
             onClick={() => onSelect(s)}
-            className="w-full text-left rounded-xl border border-[rgba(0,229,255,0.12)] bg-[#161a23] p-4 hover:border-[#00e5ff] hover:bg-[#1e2330] transition-all group"
+            className="w-full text-left rounded-xl border border-border bg-card p-4 hover:border-primary hover:bg-secondary transition-all group"
           >
             {/* Linha superior: data + IHB + lixeira */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Calendar size={14} className="text-[#00e5ff]" />
-                <span className="text-[#e8eaf0] text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <Calendar size={14} className="text-primary" />
+                <span className="text-foreground text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
                   {s.date}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 {(s.pre.ihb || s.post.ihb) && (
                   <span
-                    className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#ff5c00]/15 text-[#ff5c00] text-xs"
+                    className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/15 text-accent text-xs"
                     style={{ fontFamily: "'Inter', sans-serif" }}
                   >
-                    <AlertCircle size={14} className="text-[#ff5c00] shrink-0" />
+                    <AlertCircle size={14} className="text-accent shrink-0" />
                     IHB
                   </span>
                 )}
-                {/* Botão lixeira — e.stopPropagation evita abrir o detalhe */}
                 <button
                   onClick={(e) => { e.stopPropagation(); setDeleteId(s.id); }}
-                  className="w-8 h-8 rounded-full flex items-center justify-center bg-[#1e2330] text-[#7a8099] hover:text-[#ff3131] hover:bg-[#ff3131]/10 transition-all shrink-0"
+                  className="w-8 h-8 rounded-full flex items-center justify-center bg-secondary text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all shrink-0"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -74,26 +73,26 @@ export function SessionHistory({ sessions, onSelect, onDelete }: SessionHistoryP
             {/* Grade de métricas */}
             <div className="grid grid-cols-4 gap-3">
               <div>
-                <p className="text-[#7a8099] text-xs mb-1">Vel. Média</p>
-                <p className="text-[#00e5ff]" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
-                  {s.during.speed} <span className="text-[#7a8099]">km/h</span>
+                <p className="text-muted-foreground text-xs mb-1">Vel. Média</p>
+                <p className="text-primary" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
+                  {s.during.speed} <span className="text-muted-foreground">km/h</span>
                 </p>
               </div>
               <div>
-                <p className="text-[#7a8099] text-xs mb-1">BPM Pico</p>
-                <p className="text-[#ff3131]" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
+                <p className="text-muted-foreground text-xs mb-1">BPM Pico</p>
+                <p className="text-destructive" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
                   {s.during.bpm}
                 </p>
               </div>
               <div>
-                <p className="text-[#7a8099] text-xs mb-1">Distância</p>
-                <p className="text-[#00e5ff]" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
+                <p className="text-muted-foreground text-xs mb-1">Distância</p>
+                <p className="text-primary" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
                   {s.during.distance} km
                 </p>
               </div>
               <div>
-                <p className="text-[#7a8099] text-xs mb-1">Duração</p>
-                <p className="text-[#e8eaf0]" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
+                <p className="text-muted-foreground text-xs mb-1">Duração</p>
+                <p className="text-foreground" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
                   {fmtTime(s.during.timeSeconds)}
                 </p>
               </div>
@@ -102,7 +101,6 @@ export function SessionHistory({ sessions, onSelect, onDelete }: SessionHistoryP
         ))}
       </div>
 
-      {/* Modal de confirmação de exclusão */}
       {deleteId && (
         <ConfirmModal
           title="APAGAR TREINO"

@@ -15,19 +15,22 @@ export function Header({ page, setPage, userName, onLogout }: HeaderProps) {
 
   return (
     <>
-      <header className="border-b border-[rgba(0,229,255,0.08)] px-4 py-4 flex items-center justify-between max-w-lg mx-auto">
+      <header className="border-b border-border px-4 py-4 flex items-center justify-between max-w-lg mx-auto bg-background">
         <div className="flex items-center gap-2">
           <img src="/icon.png" alt="FlowHeart" className="w-8 h-8 rounded-lg object-contain" />
           <div>
-            <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1 }}>
-              FLOW<span className="text-[#ff3131]">HEART</span>
+            <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 800, lineHeight: 1 }}
+              className="text-foreground">
+              FLOW<span className="text-accent">HEART</span>
             </p>
-            <p className="text-[#ffffff]" style={{ fontSize: "0.6rem", letterSpacing: "0.1em" }}>BIKE TRAINING TRACKER</p>
+            <p className="text-muted-foreground" style={{ fontSize: "0.6rem", letterSpacing: "0.1em" }}>
+              BIKE TRAINING TRACKER
+            </p>
           </div>
         </div>
         <button
           onClick={() => setDrawerOpen(true)}
-          className="text-[#7a8099] hover:text-[#00e5ff] transition-colors p-2 rounded-lg hover:bg-[#1e2330]"
+          className="text-muted-foreground hover:text-primary transition-colors p-2 rounded-lg hover:bg-secondary"
         >
           <Menu size={22} />
         </button>
