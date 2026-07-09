@@ -1,0 +1,9 @@
+-- Como voltar para uma versão anterior do git
+Pelo Terminal (mais seguro):
+1. Abra o terminal integrado no VS Code (Ctrl + ').
+2. Use o comando abaixo para ver o ID do commit (hash) para o qual você quer voltar:
+git log --oneline
+3. Para voltar para um commit específico, use:
+git reset --hard ID_DO_COMMIT
+(Substitua ID_DO_COMMIT pelos primeiros 7 caracteres do ID que apareceu no comando anterior).
+----------------------------------------------------------------------------------------------
