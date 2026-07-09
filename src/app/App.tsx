@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { AppPage } from "../types";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
@@ -12,6 +12,9 @@ import { RegisterPage } from "../pages/RegisterPage";
 import { LoginPage } from "../pages/LoginPage";
 import { PerfilPage } from "../pages/PerfilPage";
 import { EstatisticasPage } from "../pages/EstatisticasPage";
+import { isAuthenticated, apiGetMe, clearToken } from "../utils/api";
+
+// ─── Helper de navegação ──────────────────────────────────────────────────────
 
 function navigate(setPage: (p: AppPage) => void, page: AppPage) {
   if (!document.startViewTransition) {
@@ -21,32 +24,65 @@ function navigate(setPage: (p: AppPage) => void, page: AppPage) {
   document.startViewTransition(() => setPage(page));
 }
 
+// ─── Componente principal ─────────────────────────────────────────────────────
+
 export default function App() {
   const [page, setPage] = useState<AppPage>({ tag: "onboarding" });
 
   const {
     sessions,
     userName,
-    pre,
-    setPre,
-    during,
-    setDuring,
-    post,
-    setPost,
+    loadingSession,
+    pre, setPre,
+    during, setDuring,
+    post, setPost,
     handleSetUserName,
     startNewWorkout,
     saveSession,
+    deleteSession,
     logout,
+    deleteAccount,
+    fetchSessions,
   } = useWorkout();
+
+  /**
+   * Ao iniciar o app verifica se há token válido salvo.
+   * Se sim, busca o usuário na API e vai direto para home.
+   * Se o token estiver expirado (401), redireciona para login.
+   */
+  useEffect(() => {
+    if (!isAuthenticated()) return;
+
+    apiGetMe()
+      .then(async (user) => {
+        handleSetUserName(user.name);
+        navigate(setPage, { tag: "home" });
+      })
+      .catch(() => {
+        // Token expirado ou inválido
+        clearToken();
+        navigate(setPage, { tag: "onboarding" });
+      });
+  }, []);
 
   const handleStartWorkout = () => {
     startNewWorkout();
     navigate(setPage, { tag: "workout", phase: "pre" });
   };
 
-  const handleSaveAndNavigate = () => {
-    saveSession();
+  const handleSaveAndNavigate = async () => {
+    await saveSession();
     navigate(setPage, { tag: "history" });
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate(setPage, { tag: "onboarding" });
+  };
+
+  const handleDeleteAccount = async () => {
+    await deleteAccount();
+    navigate(setPage, { tag: "onboarding" });
   };
 
   return (
@@ -61,54 +97,14 @@ export default function App() {
             page={page}
             setPage={(p) => navigate(setPage, p)}
             userName={userName}
-            onLogout={() => {
-              logout();
-              navigate(setPage, { tag: "onboarding" });
-            }}
+            onLogout={handleLogout}
           />
         )}
 
       <main className="max-w-lg mx-auto px-4 py-6">
+
         {page.tag === "onboarding" && (
           <OnboardingPage setPage={(p) => navigate(setPage, p)} />
-        )}
-
-        {page.tag === "home" && (
-          <HomePage
-            userName={userName}
-            sessions={sessions}
-            setPage={(p) => navigate(setPage, p)}
-            startNewWorkout={handleStartWorkout}
-          />
-        )}
-
-        {page.tag === "workout" && (
-          <WorkoutPage
-            phase={page.phase}
-            pre={pre}
-            setPre={setPre}
-            during={during}
-            setDuring={setDuring}
-            post={post}
-            setPost={setPost}
-            setPage={(p) => navigate(setPage, p)}
-            saveSession={handleSaveAndNavigate}
-          />
-        )}
-
-        {page.tag === "history" && (
-          <HistoryPage
-            sessions={sessions}
-            setPage={(p) => navigate(setPage, p)}
-            onBack={() => navigate(setPage, { tag: "home" })}
-          />
-        )}
-
-        {page.tag === "detail" && (
-          <DetailPage
-            session={page.session}
-            onBack={() => navigate(setPage, { tag: "history" })}
-          />
         )}
 
         {page.tag === "register" && (
@@ -127,11 +123,53 @@ export default function App() {
           />
         )}
 
-        {page.tag === "perfil" && <PerfilPage userName={userName} />}
+        {page.tag === "home" && (
+          <HomePage
+            userName={userName}
+            sessions={sessions}
+            setPage={(p) => navigate(setPage, p)}
+            startNewWorkout={handleStartWorkout}
+          />
+        )}
+
+        {page.tag === "workout" && (
+          <WorkoutPage
+            phase={page.phase}
+            pre={pre} setPre={setPre}
+            during={during} setDuring={setDuring}
+            post={post} setPost={setPost}
+            setPage={(p) => navigate(setPage, p)}
+            saveSession={handleSaveAndNavigate}
+          />
+        )}
+
+        {page.tag === "history" && (
+          <HistoryPage
+            sessions={sessions}
+            setPage={(p) => navigate(setPage, p)}
+            onBack={() => navigate(setPage, { tag: "home" })}
+            onDelete={deleteSession}
+          />
+        )}
+
+        {page.tag === "detail" && (
+          <DetailPage
+            session={page.session}
+            onBack={() => navigate(setPage, { tag: "history" })}
+          />
+        )}
 
         {page.tag === "estatisticas" && (
-          <EstatisticasPage sessions={sessions} />
+          <EstatisticasPage sessions={sessions} userName={userName} />
         )}
+
+        {page.tag === "perfil" && (
+          <PerfilPage
+            userName={userName}
+            onDeleteAccount={handleDeleteAccount}
+          />
+        )}
+
       </main>
 
       {(page.tag === "onboarding" ||

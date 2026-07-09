@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import type { AppPage } from "../types";
-import { saveUser, saveUserName } from "../utils/storage";
+import { apiRegister } from "../utils/api";
+import { saveToken } from "../utils/api";
 
 interface RegisterPageProps {
   setUserName: (name: string) => void;
@@ -9,7 +10,11 @@ interface RegisterPageProps {
   onBack: () => void;
 }
 
-function PasswordInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+function PasswordInput({ value, onChange, placeholder }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
@@ -37,22 +42,27 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const canRegister = name.trim() && password.length === 6 && confirmPassword.length === 6;
 
-  const handleRegister = () => {
-    if (password.length < 6) {
-      setErrorMessage("A senha deve ter exatamente 6 caracteres.");
-      return;
-    }
+  const handleRegister = async () => {
     if (password !== confirmPassword) {
       setErrorMessage("As senhas não coincidem.");
       return;
     }
-    saveUser(name, password);  // salva na lista de usuários
-    saveUserName(name);        // salva como último logado
-    setUserName(name);
-    setPage({ tag: "home" });
+    setLoading(true);
+    try {
+      const token = await apiRegister(name, password);
+      saveToken(token, rememberMe);
+      setUserName(name);
+      setPage({ tag: "home" });
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Erro ao registrar");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,8 +76,7 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
         </h1>
         <p className="text-[#7a8099] mt-2 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
           Preencha os dados para criar sua conta,
-          <br />
-          e comece a registrar seus treinos.
+          <br />e comece a registrar seus treinos.
         </p>
       </div>
 
@@ -101,6 +110,19 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
           <PasswordInput value={confirmPassword} onChange={setConfirmPassword} placeholder="Repita a senha" />
         </div>
 
+        {/* Lembrar de mim */}
+        <button
+          onClick={() => setRememberMe((v) => !v)}
+          className="flex items-center gap-3 w-full"
+        >
+          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${rememberMe ? "border-[#00e5ff] bg-[#00e5ff]" : "border-[rgba(0,229,255,0.3)] bg-transparent"}`}>
+            {rememberMe && <span className="text-[#0d0f14] text-xs font-bold">✓</span>}
+          </div>
+          <span className="text-[#7a8099] text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+            Lembrar de mim
+          </span>
+        </button>
+
         {errorMessage && (
           <p className="text-[#ff3131] text-xs" style={{ fontFamily: "'Inter', sans-serif" }}>
             {errorMessage}
@@ -108,13 +130,13 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
         )}
 
         <button
-          disabled={!canRegister}
+          disabled={!canRegister || loading}
           onClick={handleRegister}
           className="w-full rounded-xl py-4 flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
           style={{ background: "linear-gradient(135deg, #00e5ff 0%, #00b8cc 100%)", color: "#0d0f14" }}
         >
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
-            CRIAR CONTA
+            {loading ? "CRIANDO..." : "CRIAR CONTA"}
           </span>
         </button>
 

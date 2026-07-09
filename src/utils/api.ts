@@ -6,8 +6,8 @@ const API_URL = "http://localhost:8000";
 
 /**
  * Salva o token JWT.
- * Se rememberMe for true, salva no localStorage (persiste).
- * Se false, salva no sessionStorage (some ao fechar o browser).
+ * rememberMe=true → localStorage (persiste entre sessões)
+ * rememberMe=false → sessionStorage (some ao fechar o browser)
  */
 export function saveToken(token: string, rememberMe: boolean): void {
   if (rememberMe) {
@@ -39,7 +39,7 @@ export function clearToken(): void {
 }
 
 /**
- * Verifica se há token válido salvo.
+ * Verifica se há token salvo.
  */
 export function isAuthenticated(): boolean {
   return !!loadToken();
@@ -48,8 +48,8 @@ export function isAuthenticated(): boolean {
 // ─── Fetch autenticado ────────────────────────────────────────────────────────
 
 /**
- * Wrapper do fetch que adiciona o token JWT no header automaticamente.
- * Lança erro com status 401 se o token expirar — o App redireciona para login.
+ * Wrapper do fetch que adiciona o token JWT automaticamente.
+ * Lança erro "UNAUTHORIZED" se o token expirar — App redireciona para login.
  */
 export async function apiFetch(
   endpoint: string,
@@ -67,7 +67,6 @@ export async function apiFetch(
   });
 
   if (response.status === 401) {
-    // Token expirado ou inválido — limpa e lança erro para o App redirecionar
     clearToken();
     throw new Error("UNAUTHORIZED");
   }

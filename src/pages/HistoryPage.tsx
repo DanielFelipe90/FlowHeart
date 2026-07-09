@@ -6,12 +6,12 @@ interface HistoryPageProps {
   sessions: WorkoutSession[];
   setPage: (page: AppPage) => void;
   onBack: () => void;
+  onDelete: (id: string) => void;
 }
 
-export function HistoryPage({ sessions, setPage, onBack }: HistoryPageProps) {
+export function HistoryPage({ sessions, setPage, onBack, onDelete }: HistoryPageProps) {
   return (
     <div>
-      {/* Botão de voltar ao inicio */}
       <button
         onClick={onBack}
         className="flex items-center gap-2 text-[#7a8099] hover:text-[#00e5ff] transition-colors mb-6"
@@ -33,6 +33,7 @@ export function HistoryPage({ sessions, setPage, onBack }: HistoryPageProps) {
       <SessionHistory
         sessions={sessions}
         onSelect={(s) => setPage({ tag: "detail", session: s })}
+        onDelete={onDelete}
       />
     </div>
   );

@@ -1,5 +1,4 @@
 import type { AppPage } from "../types";
-import { isRegistered } from "../utils/storage";
 
 interface OnboardingPageProps {
   setPage: (page: AppPage) => void;
@@ -34,16 +33,14 @@ export function OnboardingPage({ setPage }: OnboardingPageProps) {
           </span>
         </button>
 
-        {isRegistered() && (
-          <button
-            onClick={() => setPage({ tag: "login" })}
-            className="w-full rounded-xl py-4 flex items-center justify-center border border-[rgba(0,229,255,0.12)] text-[#7a8099] hover:text-[#e8eaf0] hover:border-[rgba(0,229,255,0.3)] transition-all"
-          >
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
-              ENTRAR
-            </span>
-          </button>
-        )}
+        <button
+          onClick={() => setPage({ tag: "login" })}
+          className="w-full rounded-xl py-4 flex items-center justify-center border border-[rgba(0,229,255,0.12)] text-[#7a8099] hover:text-[#e8eaf0] hover:border-[rgba(0,229,255,0.3)] transition-all"
+        >
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
+            ENTRAR
+          </span>
+        </button>
       </div>
     </div>
   );

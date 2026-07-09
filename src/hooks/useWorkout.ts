@@ -1,155 +1,157 @@
-import { useState, useEffect } from "react";
-import {
-  saveSessions,
-  loadSessions,
-  saveUserName,
-  loadUserName,
-} from "../utils/storage";
-import type {
-  WorkoutSession,
-  PreState,
-  DuringState,
-  PostState,
-} from "../types";
+import { useState, useEffect, useCallback } from "react";
+import { saveUserName, loadUserName, clearUserName } from "../utils/storage";
+import { apiGetSessions, apiCreateSession, apiDeleteSession, apiDeleteAccount, clearToken } from "../utils/api";
+import type { WorkoutSession, PreState, DuringState, PostState } from "../types";
 
 /**
  * useWorkout — Hook central de lógica de negócio do FlowHeart
  *
  * Encapsula:
  * - Estados de sessões, nome do usuário e fases do treino
- * - Persistência automática no localStorage por usuário
- * - Ações: iniciar treino, salvar sessão, atualizar nome, logout
+ * - Comunicação com a API (buscar, criar, apagar sessões)
+ * - Ações: iniciar treino, salvar sessão, logout, apagar conta
  *
- * A navegação entre páginas é responsabilidade do App.tsx —
- * este hook não conhece rotas nem componentes de UI.
+ * A navegação entre páginas é responsabilidade do App.tsx.
  */
 export function useWorkout() {
-  // ── Estado persistido ──────────────────────────────────────────────────
 
-  /** Nome do usuário carregado do localStorage */
+  // ── Estado ────────────────────────────────────────────────────────────────
+
+  const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [userName, setUserName] = useState<string>(() => loadUserName());
+  const [loadingSession, setLoadingSession] = useState(false);
+
+  // ── Carregar sessões da API ────────────────────────────────────────────────
 
   /**
-   * Sessões carregadas do localStorage na inicialização.
-   * Usa o nome do usuário como chave para separar dados entre usuários.
+   * Busca todas as sessões do usuário logado na API.
+   * Chamada ao logar ou ao montar o componente com token válido.
    */
-  const [sessions, setSessions] = useState<WorkoutSession[]>(
-    () => loadSessions(loadUserName()) as WorkoutSession[]
-  );
+  const fetchSessions = useCallback(async () => {
+    try {
+      const data = await apiGetSessions();
+      setSessions(data as WorkoutSession[]);
+    } catch (err) {
+      console.error("Erro ao buscar sessões:", err);
+    }
+  }, []);
 
-  /**
-   * Persiste as sessões no localStorage sempre que o array ou o usuário mudar.
-   * Só salva se houver um usuário logado — evita salvar sessão vazia no logout.
-   */
-  useEffect(() => {
-    if (userName) saveSessions(sessions, userName);
-  }, [sessions, userName]);
-
-  // ── Estado temporário do treino em andamento ───────────────────────────
-  // Todos resetados em startNewWorkout() antes de cada nova sessão.
+  // ── Estado temporário do treino em andamento ───────────────────────────────
 
   const [pre, setPre] = useState<PreState>({
-    systolic: "",
-    diastolic: "",
-    bpm: "",
-    ihb: false,
+    systolic: "", diastolic: "", bpm: "", ihb: false,
   });
 
   const [during, setDuring] = useState<DuringState>({
-    systolic: "",
-    diastolic: "",
-    bpm: "",
-    distance: "",
-    timeSeconds: 0,
-    speed: "",
+    systolic: "", diastolic: "", bpm: "", distance: "", timeSeconds: 0, speed: "",
   });
 
   const [post, setPost] = useState<PostState>({
-    systolic: "",
-    diastolic: "",
-    bpm: "",
-    ihb: false,
+    systolic: "", diastolic: "", bpm: "", ihb: false,
   });
 
-  // ── Ações ──────────────────────────────────────────────────────────────
+  // ── Ações ──────────────────────────────────────────────────────────────────
 
   /**
-   * Salva o nome no estado e no localStorage.
-   * Também carrega as sessões do novo usuário ao logar.
+   * Salva o nome do usuário no estado e localmente para exibição na UI.
+   * Também busca as sessões da API após o login/registro.
    */
-  function handleSetUserName(name: string) {
+  async function handleSetUserName(name: string) {
     setUserName(name);
     saveUserName(name);
-    // Carrega as sessões do usuário que acabou de logar/registrar
-    setSessions(loadSessions(name) as WorkoutSession[]);
+    await fetchSessions();
   }
 
   /**
    * Reseta todos os estados temporários do treino.
-   * Chamada pelo App antes de navegar para o pré-treino.
    */
   function startNewWorkout() {
     setPre({ systolic: "", diastolic: "", bpm: "", ihb: false });
-    setDuring({
-      systolic: "",
-      diastolic: "",
-      bpm: "",
-      distance: "",
-      timeSeconds: 0,
-      speed: "",
-    });
+    setDuring({ systolic: "", diastolic: "", bpm: "", distance: "", timeSeconds: 0, speed: "" });
     setPost({ systolic: "", diastolic: "", bpm: "", ihb: false });
   }
 
   /**
    * Finaliza o treino:
-   * 1. Calcula velocidade média (distância ÷ horas)
-   * 2. Formata a data/hora atual
-   * 3. Adiciona a sessão ao array (dispara persistência via useEffect)
-   *
-   * A navegação para o histórico é feita pelo App após chamar esta função.
+   * 1. Calcula velocidade média
+   * 2. Formata a data/hora
+   * 3. Envia para a API
+   * 4. Atualiza o estado local
    */
-  function saveSession() {
-    const hours = during.timeSeconds / 3600;
-    const speed =
-      hours > 0 && during.distance
+  async function saveSession() {
+    setLoadingSession(true);
+    try {
+      const hours = during.timeSeconds / 3600;
+      const speed = hours > 0 && during.distance
         ? (parseFloat(during.distance) / hours).toFixed(1)
         : "0";
 
-    const now = new Date();
-    const date = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()} — ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      const now = new Date();
+      const date = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()} — ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
-    setSessions((s) => [
-      ...s,
-      {
-        id: Date.now().toString(),
+      const sessionData = {
         date,
         pre,
         during: { ...during, speed },
         post,
-      },
-    ]);
+      };
+
+      const created = await apiCreateSession(sessionData);
+      setSessions((s) => [...s, created as WorkoutSession]);
+    } catch (err) {
+      console.error("Erro ao salvar sessão:", err);
+    } finally {
+      setLoadingSession(false);
+    }
   }
 
   /**
-   * Desloga o usuário sem apagar os dados.
-   * Limpa apenas o estado — localStorage permanece intacto.
-   * A navegação para onboarding é feita pelo App após chamar esta função.
+   * Apaga uma sessão específica via API e atualiza o estado local.
+   */
+  async function deleteSession(id: string) {
+    try {
+      await apiDeleteSession(id);
+      setSessions((s) => s.filter((session) => session.id !== id));
+    } catch (err) {
+      console.error("Erro ao apagar sessão:", err);
+    }
+  }
+
+  /**
+   * Desloga o usuário — limpa token e estado local.
    */
   function logout() {
+    clearToken();
+    clearUserName();
     setUserName("");
     setSessions([]);
+  }
+
+  /**
+   * Apaga a conta do usuário via API e desloga.
+   */
+  async function deleteAccount() {
+    try {
+      await apiDeleteAccount();
+      logout();
+    } catch (err) {
+      console.error("Erro ao apagar conta:", err);
+    }
   }
 
   return {
     sessions,
     userName,
+    loadingSession,
     pre, setPre,
     during, setDuring,
     post, setPost,
     handleSetUserName,
     startNewWorkout,
     saveSession,
+    deleteSession,
     logout,
+    deleteAccount,
+    fetchSessions,
   };
 }
