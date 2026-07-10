@@ -134,3 +134,27 @@ export async function apiDeleteSession(id: string): Promise<void> {
   const res = await apiFetch(`/sessions/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Erro ao apagar sessão");
 }
+
+// ─── Relatórios ─────────────────────────────────────────────────────────────
+export async function apiDownloadReport(): Promise<void> {
+  const token = loadToken();
+  const res = await fetch("http://localhost:8000/reports/pdf", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 401) {
+    clearToken();
+    throw new Error("UNAUTHORIZED");
+  }
+
+  if (!res.ok) throw new Error("Erro ao gerar relatório");
+
+  // Cria um link de download e clica automaticamente
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "flowheart_relatorio.pdf";
+  a.click();
+  URL.revokeObjectURL(url);
+}
