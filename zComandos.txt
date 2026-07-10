@@ -7,3 +7,21 @@ git log --oneline
 git reset --hard ID_DO_COMMIT
 (Substitua ID_DO_COMMIT pelos primeiros 7 caracteres do ID que apareceu no comando anterior).
 ----------------------------------------------------------------------------------------------
+
+Precisa para rodar no windowns GTK
+O erro que você está enfrentando está relacionado ao WeasyPrint, que não conseguiu encontrar as 
+bibliotecas GTK/GObject necessárias no Windows.
+Problema
+O WeasyPrint precisa de bibliotecas GTK para funcionar no Windows. Você instalou o pacote Python, 
+mas faltam as dependências de sistema.
+
+Solução para Windows
+Instalar GTK (Recomendado)
+Baixe o GTK para Windows:
+1. Acesse: https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases
+2. Baixe o arquivo gtk3-runtime-3.24.31-2024-01-13-ts-win64.exe (ou versão mais recente)
+3. Instale o GTK:
+4. Execute o instalador
+5. Aceite os termos
+6. Durante a instalação, marque a opção "Add GTK to PATH" (ou similar)
+7. Complete a instalação
