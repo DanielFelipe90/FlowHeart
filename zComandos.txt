@@ -8,13 +8,10 @@ git reset --hard ID_DO_COMMIT
 (Substitua ID_DO_COMMIT pelos primeiros 7 caracteres do ID que apareceu no comando anterior).
 ----------------------------------------------------------------------------------------------
 
-Precisa para rodar no windowns GTK
-O erro que você está enfrentando está relacionado ao WeasyPrint, que não conseguiu encontrar as 
-bibliotecas GTK/GObject necessárias no Windows.
-Problema
+Precisa para rodar no windows GTK
+
 O WeasyPrint precisa de bibliotecas GTK para funcionar no Windows. Você instalou o pacote Python, 
 mas faltam as dependências de sistema.
-
 Solução para Windows
 Instalar GTK (Recomendado)
 Baixe o GTK para Windows:
