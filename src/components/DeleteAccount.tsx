@@ -14,7 +14,7 @@ export function DeleteAccount({ onDelete }: DeleteAccountProps) {
       <div className="fixed bottom-6 left-0 w-full flex justify-center p-4">
         <button
           onClick={() => setShowModal(true)}
-          className="w-full max-w-sm rounded-xl py-4 flex items-center justify-center gap-2 text-[#ff3131] hover:text-[#fd4d4d] transition-all border border-transparent"
+          className="w-full max-w-sm rounded-xl py-4 flex items-center justify-center gap-2 text-destructive hover:opacity-70 transition-all"
         >
           <Trash2 size={16} />
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1rem", fontWeight: 700, letterSpacing: "0.05em" }}>

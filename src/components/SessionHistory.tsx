@@ -38,10 +38,10 @@ export function SessionHistory({ sessions, onSelect, onDelete }: SessionHistoryP
     <>
       <div className="space-y-3">
         {[...sessions].reverse().map((s) => (
-          <button
+          <div
             key={s.id}
             onClick={() => onSelect(s)}
-            className="w-full text-left rounded-xl border border-border bg-card p-4 hover:border-primary hover:bg-secondary transition-all group"
+            className="w-full text-left rounded-xl border border-border bg-card p-4 hover:border-primary hover:bg-secondary transition-all group cursor-pointer"
           >
             {/* Linha superior: data + IHB + lixeira */}
             <div className="flex items-center justify-between mb-3">
@@ -97,7 +97,7 @@ export function SessionHistory({ sessions, onSelect, onDelete }: SessionHistoryP
                 </p>
               </div>
             </div>
-          </button>
+          </div>
         ))}
       </div>
 
