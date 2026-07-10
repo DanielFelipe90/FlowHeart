@@ -18,24 +18,25 @@ function IHBToggle({ value, onChange }: { value: boolean; onChange: (v: boolean)
         <button
             onClick={() => onChange(!value)}
             className={`flex items-center gap-3 w-full rounded-xl border p-4 transition-all ${value
-                    ? "border-[#ff5c00] bg-[#ff5c00]/10"
-                    : "border-[rgba(0,229,255,0.12)] bg-[#1e2330] hover:border-[rgba(0,229,255,0.3)]"
+                    ? "border-accent bg-accent/10"
+                    : "border-border bg-secondary hover:border-primary/30"
                 }`}
         >
             {value ? (
-                <AlertCircle size={20} className="text-[#ff5c00] shrink-0" />
+                <AlertCircle size={20} className="text-accent shrink-0" />
             ) : (
-                <CheckCircle2 size={20} className="text-[#7a8099] shrink-0" />
+                <CheckCircle2 size={20} className="text-muted-foreground shrink-0" />
             )}
             <div className="text-left">
-                <p className="text-xs uppercase tracking-widest text-[#7a8099]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
                     IHB — Batimento Irregular
                 </p>
-                <p className="text-sm mt-0.5" style={{ fontFamily: "'Inter', sans-serif", color: value ? "#ff5c00" : "#e8eaf0" }}>
+                <p className={`text-sm mt-0.5 ${value ? "text-accent" : "text-foreground"}`}
+                    style={{ fontFamily: "'Inter', sans-serif" }}>
                     {value ? "Detectado" : "Não detectado"}
                 </p>
             </div>
-            <div className={`ml-auto w-10 h-6 rounded-full transition-all relative shrink-0 ${value ? "bg-[#ff5c00]" : "bg-[#2e3448]"}`}>
+            <div className={`ml-auto w-10 h-6 rounded-full transition-all relative shrink-0 ${value ? "bg-accent" : "bg-switch-background"}`}>
                 <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${value ? "left-5" : "left-1"}`} />
             </div>
         </button>
@@ -46,7 +47,7 @@ function PhaseHeader({ phase }: { phase: Phase }) {
     const configs = {
         pre: { label: "Pré-Treino", color: "#7a8099", step: 1, desc: "Registre seus dados antes de iniciar" },
         during: { label: "Durante o Treino", color: "#ff5733", step: 2, desc: "Acompanhe seus dados durante o esforço" },
-        post: { label: "Pós-Treino", color: "#00e5ff", step: 3, desc: "Registre sua recuperação" },
+        post: { label: "Pós-Treino", color: "#0099b3", step: 3, desc: "Registre sua recuperação" },
     };
     const c = configs[phase];
     return (
@@ -59,10 +60,10 @@ function PhaseHeader({ phase }: { phase: Phase }) {
                     Etapa {c.step} de 3
                 </span>
             </div>
-            <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1.1 }}>
+            <h2 className="text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2rem", fontWeight: 800, lineHeight: 1.1 }}>
                 {c.label}
             </h2>
-            <p className="text-[#7a8099] text-sm mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>{c.desc}</p>
+            <p className="text-muted-foreground text-sm mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>{c.desc}</p>
         </div>
     );
 }
@@ -70,7 +71,7 @@ function PhaseHeader({ phase }: { phase: Phase }) {
 function StepIndicator({ current }: { current: Phase }) {
     const phases: Phase[] = ["pre", "during", "post"];
     const idx = phases.indexOf(current);
-    const colors = { pre: "#7a8099", during: "#ff5733", post: "#00e5ff" };
+    const colors = { pre: "#7a8099", during: "#ff5733", post: "#0099b3" };
     return (
         <div className="flex items-center gap-1 mb-6">
             {phases.map((p, i) => (
@@ -79,7 +80,7 @@ function StepIndicator({ current }: { current: Phase }) {
                         className="h-1 rounded-full transition-all"
                         style={{
                             width: i <= idx ? "2rem" : "1.25rem",
-                            background: i === idx ? colors[current] : "#2e3448",
+                            background: i === idx ? colors[current] : "var(--switch-background)",
                             opacity: i < idx ? 0.5 : 1,
                         }}
                     />
@@ -113,8 +114,7 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
                     <button
                         disabled={!canAdvancePre}
                         onClick={() => setPage({ tag: "workout", phase: "during" })}
-                        className="w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-                        style={{ background: "linear-gradient(135deg, #00e5ff 0%, #00b8cc 100%)", color: "#0d0f14" }}
+                        className="w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 bg-primary text-primary-foreground"
                     >
                         <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>INICIAR TREINO</span>
                         <ChevronRight size={18} />
@@ -133,8 +133,8 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
                     <button
                         disabled={!canAdvanceDuring}
                         onClick={() => setPage({ tag: "workout", phase: "post" })}
-                        className="w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-                        style={{ background: canAdvanceDuring ? "linear-gradient(135deg, #00e5ff, #00a8bf)" : "#1e2330", color: canAdvanceDuring ? "#0d0f14" : "#fff" }}
+                        className={`w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 ${canAdvanceDuring ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+                            }`}
                     >
                         <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>FINALIZAR TREINO</span>
                         <ChevronRight size={18} />
@@ -157,8 +157,8 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
                     <button
                         disabled={!canSavePost}
                         onClick={saveSession}
-                        className="w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-                        style={{ background: canSavePost ? "linear-gradient(135deg, #00e5ff, #00b8cc)" : "#1e2330", color: canSavePost ? "#0d0f14" : "#fff" }}
+                        className={`w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 ${canSavePost ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+                            }`}
                     >
                         <CheckCircle2 size={18} />
                         <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>SALVAR TREINO</span>

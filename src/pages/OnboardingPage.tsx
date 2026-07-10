@@ -12,12 +12,15 @@ export function OnboardingPage({ setPage }: OnboardingPageProps) {
       </div>
 
       <div className="mb-8">
-        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2.5rem", fontWeight: 800, color: "#e8eaf0", lineHeight: 1.05 }}>
+        <h1
+          className="text-foreground"
+          style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2.5rem", fontWeight: 800, lineHeight: 1.05 }}
+        >
           BEM-VINDO AO<br />
-          <span className="text-[#00e5ff]">FLOW</span>
-          <span className="text-[#ff3131]">HEART</span>
+          <span className="text-primary">FLOW</span>
+          <span className="text-destructive">HEART</span>
         </h1>
-        <p className="text-[#7a8099] mt-2 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <p className="text-muted-foreground mt-2 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
           Seu tracker de treino de ciclismo com monitoramento cardíaco.
         </p>
       </div>
@@ -25,8 +28,7 @@ export function OnboardingPage({ setPage }: OnboardingPageProps) {
       <div className="space-y-3">
         <button
           onClick={() => setPage({ tag: "register" })}
-          className="w-full rounded-xl py-4 flex items-center justify-center transition-all hover:opacity-90"
-          style={{ background: "linear-gradient(135deg, #00e5ff 0%, #00b8cc 100%)", color: "#0d0f14" }}
+          className="w-full rounded-xl py-4 flex items-center justify-center transition-all hover:opacity-90 bg-primary text-primary-foreground"
         >
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
             REGISTRAR
@@ -35,7 +37,7 @@ export function OnboardingPage({ setPage }: OnboardingPageProps) {
 
         <button
           onClick={() => setPage({ tag: "login" })}
-          className="w-full rounded-xl py-4 flex items-center justify-center border border-[rgba(0,229,255,0.12)] text-[#7a8099] hover:text-[#e8eaf0] hover:border-[rgba(0,229,255,0.3)] transition-all"
+          className="w-full rounded-xl py-4 flex items-center justify-center border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
         >
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
             ENTRAR

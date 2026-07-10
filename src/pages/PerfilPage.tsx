@@ -26,20 +26,24 @@ export function PerfilPage({ userName, onDeleteAccount }: PerfilPageProps) {
   return (
     <div className="space-y-6 flex flex-col min-h-[70vh]">
       <div className="space-y-4 flex flex-col items-center mb-8">
+
         {/* Cabeçalho com título e botão de tema */}
         <div className="flex items-center justify-between w-full">
-          <h1 style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontSize: "2.5rem",
-            fontWeight: 800,
-            color: "#e8eaf0",
-            lineHeight: 1.05,
-          }}>
+          <h1
+            className="text-foreground"
+            style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: "2.5rem",
+              fontWeight: 800,
+              lineHeight: 1.05,
+            }}
+          >
             Perfil
           </h1>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </div>
 
+        {/* Avatar */}
         <div
           className="flex justify-center items-center w-30 h-30 rounded-full mt-4"
           style={{ background: avatarColor }}
@@ -55,7 +59,7 @@ export function PerfilPage({ userName, onDeleteAccount }: PerfilPageProps) {
           </p>
         </div>
 
-        <span className="text-[#ffffff]">
+        <span className="text-foreground font-semibold">
           {userName.toUpperCase()}
         </span>
       </div>

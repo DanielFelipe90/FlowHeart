@@ -14,18 +14,21 @@ export function HistoryPage({ sessions, setPage, onBack, onDelete }: HistoryPage
     <div>
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-[#7a8099] hover:text-[#00e5ff] transition-colors mb-6"
+        className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
         <ArrowLeft size={16} />
         <span>Voltar ao início</span>
       </button>
       <div className="mb-6">
-        <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2rem", fontWeight: 800, color: "#e8eaf0" }}>
+        <h2
+          className="text-foreground"
+          style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2rem", fontWeight: 800 }}
+        >
           HISTÓRICO
         </h2>
         {sessions.length > 0 && (
-          <p className="text-[#7a8099] text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             {sessions.length} treino{sessions.length !== 1 ? "s" : ""} registrado{sessions.length !== 1 ? "s" : ""}
           </p>
         )}
