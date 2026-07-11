@@ -9,15 +9,18 @@ interface RegisterPageProps {
   onBack: () => void;
 }
 
-function PasswordInput({ value, onChange, placeholder }: {
+function PasswordInput({ value, onChange, placeholder, id }: {
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
+  id: string; // adiciona
 }) {
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
       <input
+        id={id}
+        name={id}
         type={show ? "text" : "password"}
         value={value}
         placeholder={placeholder}
@@ -99,17 +102,17 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
         </div>
 
         <div>
-          <label className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <label htmlFor="password" className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
             Senha (6 caracteres)
           </label>
-          <PasswordInput value={password} onChange={setPassword} placeholder="6 letras ou números" />
+          <PasswordInput id="password" value={password} onChange={setPassword} placeholder="6 letras ou números" />
         </div>
 
         <div>
-          <label className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <label htmlFor="confirmPassword" className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
             Confirmar Senha
           </label>
-          <PasswordInput value={confirmPassword} onChange={setConfirmPassword} placeholder="Repita a senha" />
+          <PasswordInput id="confirmPassword" value={confirmPassword} onChange={setConfirmPassword} placeholder="Repita a senha" />
         </div>
 
         {/* Lembrar de mim */}

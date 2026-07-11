@@ -135,11 +135,17 @@ export async function apiDeleteSession(id: string): Promise<void> {
   if (!res.ok) throw new Error("Erro ao apagar sessão");
 }
 
-// ─── Relatórios ─────────────────────────────────────────────────────────────
-export async function apiDownloadReport(): Promise<void> {
+/**
+ * Solicita ao backend a geração do PDF e faz o download automaticamente.
+ * O PDF é gerado no servidor com WeasyPrint — mais seguro que no frontend.
+ */
+export async function apiDownloadReport(userName: string): Promise<void> {
   const token = loadToken();
-  const res = await fetch("http://localhost:8000/reports/pdf", {
-    headers: { Authorization: `Bearer ${token}` },
+
+  const res = await fetch(`${API_URL}/reports/pdf`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   if (res.status === 401) {
@@ -147,14 +153,18 @@ export async function apiDownloadReport(): Promise<void> {
     throw new Error("UNAUTHORIZED");
   }
 
+  if (res.status === 404) {
+    throw new Error("Nenhum treino registrado para gerar o relatório.");
+  }
+
   if (!res.ok) throw new Error("Erro ao gerar relatório");
 
-  // Cria um link de download e clica automaticamente
+  // Cria link de download e clica automaticamente
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "flowheart_relatorio.pdf";
+  a.download = `flowheart_${userName.toLowerCase()}_${Date.now()}.pdf`;
   a.click();
   URL.revokeObjectURL(url);
 }

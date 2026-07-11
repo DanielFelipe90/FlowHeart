@@ -1,12 +1,22 @@
 import type { AppPage } from "../types";
+import { ThemeToggle } from "../components/ThemeToggle";
+import { useTheme } from "../hooks/useTheme";
 
 interface OnboardingPageProps {
   setPage: (page: AppPage) => void;
 }
 
 export function OnboardingPage({ setPage }: OnboardingPageProps) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <div className="flex flex-col justify-center min-h-[70vh]">
+
+      {/* Botão de tema no canto superior esquerdo */}
+      <div className="flex justify-end m-4">
+        <ThemeToggle theme={theme} onToggle={toggleTheme} />
+      </div>
+
       <div className="flex flex-col items-center gap-6 m-4">
         <img src="/icon.png" alt="FlowHeart" className="w-30 h-30 rounded-lg object-contain" />
       </div>

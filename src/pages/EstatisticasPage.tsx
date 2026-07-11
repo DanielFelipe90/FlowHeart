@@ -1,6 +1,8 @@
 import { Bike, Activity, Heart, Clock, Gauge } from "lucide-react";
 import type { WorkoutSession } from "../types";
 import { SimpleLineChart, useContainerWidth } from "../components/SimpleLineChart";
+import { ReportButton } from "../components/ReportButton";
+import { apiDownloadReport } from "../utils/api";
 
 interface EstatisticasPageProps {
   sessions: WorkoutSession[];
@@ -21,7 +23,7 @@ function ChartCard({ title, icon, id, series, labels, unit }: ChartCardProps) {
 
   return (
     <div className="rounded-xl bg-card border border-border p-4 mb-4">
-      {/* Cabeçalho */}
+      {/* Cabeçalho do card */}
       <div className="flex items-center gap-2 mb-3">
         {icon}
         <p className="text-muted-foreground text-xs uppercase tracking-widest" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -71,7 +73,7 @@ function ChartCard({ title, icon, id, series, labels, unit }: ChartCardProps) {
   );
 }
 
-export function EstatisticasPage({ sessions }: EstatisticasPageProps) {
+export function EstatisticasPage({ sessions, userName }: EstatisticasPageProps) {
   const labels = sessions.map((_, i) => `T${i + 1}`);
 
   if (sessions.length === 0) {
@@ -88,29 +90,38 @@ export function EstatisticasPage({ sessions }: EstatisticasPageProps) {
     );
   }
 
-  const bpmPre     = sessions.map((s) => Number(s.pre.bpm) || 0);
-  const bpmDuring  = sessions.map((s) => Number(s.during.bpm) || 0);
-  const bpmPost    = sessions.map((s) => Number(s.post.bpm) || 0);
-  const sisPre     = sessions.map((s) => Number(s.pre.systolic) || 0);
-  const diaPre     = sessions.map((s) => Number(s.pre.diastolic) || 0);
-  const sisPost    = sessions.map((s) => Number(s.post.systolic) || 0);
-  const diaPost    = sessions.map((s) => Number(s.post.diastolic) || 0);
-  const distances  = sessions.map((s) => Number(s.during.distance) || 0);
-  const speeds     = sessions.map((s) => Number(s.during.speed) || 0);
-  const durations  = sessions.map((s) => Math.round(s.during.timeSeconds / 60));
+  const bpmPre    = sessions.map((s) => Number(s.pre.bpm) || 0);
+  const bpmDuring = sessions.map((s) => Number(s.during.bpm) || 0);
+  const bpmPost   = sessions.map((s) => Number(s.post.bpm) || 0);
+  const sisPre    = sessions.map((s) => Number(s.pre.systolic) || 0);
+  const diaPre    = sessions.map((s) => Number(s.pre.diastolic) || 0);
+  const sisPost   = sessions.map((s) => Number(s.post.systolic) || 0);
+  const diaPost   = sessions.map((s) => Number(s.post.diastolic) || 0);
+  const distances = sessions.map((s) => Number(s.during.distance) || 0);
+  const speeds    = sessions.map((s) => Number(s.during.speed) || 0);
+  const durations = sessions.map((s) => Math.round(s.during.timeSeconds / 60));
 
   return (
     <div className="pb-6">
-      <div className="mb-6">
-        <h2
-          className="text-foreground"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2rem", fontWeight: 800 }}
-        >
-          ESTATÍSTICAS
-        </h2>
-        <p className="text-muted-foreground text-sm mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>
-          Evolução ao longo de {sessions.length} treino{sessions.length !== 1 ? "s" : ""}
-        </p>
+
+      {/* Cabeçalho da página com botão de exportar */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2
+            className="text-foreground"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2rem", fontWeight: 800 }}
+          >
+            ESTATÍSTICAS
+          </h2>
+          <p className="text-muted-foreground text-sm mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>
+            Evolução ao longo de {sessions.length} treino{sessions.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <ReportButton
+          onGenerate={() => apiDownloadReport(userName)}
+          disabled={sessions.length === 0}
+          label="Gerar PDF"
+        />
       </div>
 
       <ChartCard

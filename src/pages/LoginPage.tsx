@@ -9,15 +9,18 @@ interface LoginPageProps {
   onBack: () => void;
 }
 
-function PasswordInput({ value, onChange, placeholder }: {
+function PasswordInput({ value, onChange, placeholder, id }: {
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
+  id: string; // adiciona
 }) {
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
       <input
+        id={id}
+        name={id}
         type={show ? "text" : "password"}
         value={value}
         placeholder={placeholder}
@@ -111,20 +114,18 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
         </div>
 
         <div>
-          <label className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <label htmlFor="password" className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
             Senha
           </label>
-          <PasswordInput value={password} onChange={setPassword} placeholder="Sua senha" />
-        </div>
+          <PasswordInput id="password" value={password} onChange={setPassword} placeholder="Sua senha" />        </div>
 
         {/* Lembrar de mim */}
         <button
           onClick={() => setRememberMe((v) => !v)}
           className="flex items-center gap-3 w-full"
         >
-          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
-            rememberMe ? "border-primary bg-primary" : "border-primary/30 bg-transparent"
-          }`}>
+          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${rememberMe ? "border-primary bg-primary" : "border-primary/30 bg-transparent"
+            }`}>
             {rememberMe && <span className="text-primary-foreground text-xs font-bold">✓</span>}
           </div>
           <span className="text-muted-foreground text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
