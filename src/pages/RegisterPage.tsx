@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { AppPage } from "../types";
 import { apiRegister, saveToken } from "../utils/api";
 import { PasswordInput } from "../components/PasswordInput";
+import { TermsModal } from "../components/TermsModal";
 
 interface RegisterPageProps {
   setUserName: (name: string) => void;
@@ -16,14 +17,13 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
   const [errorMessage, setErrorMessage] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   const canRegister = name.trim() && password.length === 6 && confirmPassword.length === 6;
 
+  // Função centralizada para realizar o registro
   const handleRegister = async () => {
-    if (password !== confirmPassword) {
-      setErrorMessage("As senhas não coincidem.");
-      return;
-    }
+    setErrorMessage("");
     setLoading(true);
     try {
       const token = await apiRegister(name, password);
@@ -32,6 +32,7 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
       setPage({ tag: "home" });
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Erro ao registrar");
+      setShowTerms(false);
     } finally {
       setLoading(false);
     }
@@ -91,13 +92,11 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
           />
         </div>
 
-        {/* Lembrar de mim */}
         <button
           onClick={() => setRememberMe((v) => !v)}
           className="flex items-center gap-3 w-full"
         >
-          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${rememberMe ? "border-primary bg-primary" : "border-primary/30 bg-transparent"
-            }`}>
+          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${rememberMe ? "border-primary bg-primary" : "border-primary/30 bg-transparent"}`}>
             {rememberMe && <span className="text-primary-foreground text-xs font-bold">✓</span>}
           </div>
           <span className="text-muted-foreground text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -113,7 +112,13 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
 
         <button
           disabled={!canRegister || loading}
-          onClick={handleRegister}
+          onClick={() => {
+            if (password !== confirmPassword) {
+              setErrorMessage("As senhas não coincidem.");
+              return;
+            }
+            setShowTerms(true);
+          }}
           className="w-full rounded-xl py-4 flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 bg-primary text-primary-foreground"
         >
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
@@ -128,6 +133,13 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
           Voltar
         </button>
       </div>
+
+      {showTerms && (
+        <TermsModal
+          onAccept={handleRegister}
+          onClose={() => setShowTerms(false)}
+        />
+      )}
     </div>
   );
 }

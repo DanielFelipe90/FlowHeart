@@ -2,6 +2,39 @@
 @import './tailwind.css';
 @import './theme.css';
 
+//* global.css ou App.css */
+/* Isso estiliza a barra de rolagem do navegador inteiro */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) var(--background);
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--primary);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  filter: brightness(0.8);
+}
+
+
 @keyframes slide-in {
   from { transform: translateX(-100%); opacity: 0; }
   to   { transform: translateX(0);     opacity: 1; }
