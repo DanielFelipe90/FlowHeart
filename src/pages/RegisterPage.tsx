@@ -58,17 +58,21 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
 
       <div className="space-y-4">
         <div>
-          <label className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <label
+            htmlFor="username"
+            className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block"
+          >
             Nome
           </label>
           <input
             type="text"
+            id="username"
+            name="username"
             autoComplete="name"
             placeholder="Digite seu nome"
             value={name}
             onChange={(e) => setName(e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, ""))}
             className="w-full rounded-xl border border-border bg-input-background px-4 py-3 text-foreground outline-none focus:border-primary transition-all"
-            style={{ fontFamily: "'Inter', sans-serif" }}
           />
         </div>
 
