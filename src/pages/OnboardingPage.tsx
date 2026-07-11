@@ -12,7 +12,7 @@ export function OnboardingPage({ setPage }: OnboardingPageProps) {
   return (
     <div className="flex flex-col justify-center min-h-[70vh]">
 
-      {/* Botão de tema no canto superior esquerdo */}
+      {/* Botão de tema no canto superior direito */}
       <div className="flex justify-end m-4">
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </div>
