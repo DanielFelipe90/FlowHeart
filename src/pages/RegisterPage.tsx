@@ -1,42 +1,12 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
 import type { AppPage } from "../types";
 import { apiRegister, saveToken } from "../utils/api";
+import { PasswordInput } from "../components/PasswordInput";
 
 interface RegisterPageProps {
   setUserName: (name: string) => void;
   setPage: (page: AppPage) => void;
   onBack: () => void;
-}
-
-function PasswordInput({ value, onChange, placeholder, id }: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-  id: string; // adiciona
-}) {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="relative">
-      <input
-        id={id}
-        name={id}
-        type={show ? "text" : "password"}
-        value={value}
-        placeholder={placeholder}
-        maxLength={6}
-        onChange={(e) => onChange(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
-        className="w-full rounded-xl border border-border bg-input-background px-4 py-3 text-foreground outline-none focus:border-primary transition-all pr-10"
-        style={{ fontFamily: "'Inter', sans-serif" }}
-      />
-      <button
-        onClick={() => setShow((v) => !v)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-      >
-        {show ? <EyeOff size={16} /> : <Eye size={16} />}
-      </button>
-    </div>
-  );
 }
 
 export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps) {
@@ -102,17 +72,23 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
         </div>
 
         <div>
-          <label htmlFor="password" className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
-            Senha (6 caracteres)
-          </label>
-          <PasswordInput id="password" value={password} onChange={setPassword} placeholder="6 letras ou números" />
+          <PasswordInput
+            id="password"
+            label="Senha (6 caracteres)"
+            value={password}
+            onChange={setPassword}
+            placeholder="6 letras ou números"
+          />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
-            Confirmar Senha
-          </label>
-          <PasswordInput id="confirmPassword" value={confirmPassword} onChange={setConfirmPassword} placeholder="Repita a senha" />
+          <PasswordInput
+            id="confirmPassword"
+            label="Confirmar Senha"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            placeholder="Repita a senha"
+          />
         </div>
 
         {/* Lembrar de mim */}
@@ -120,9 +96,8 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
           onClick={() => setRememberMe((v) => !v)}
           className="flex items-center gap-3 w-full"
         >
-          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
-            rememberMe ? "border-primary bg-primary" : "border-primary/30 bg-transparent"
-          }`}>
+          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${rememberMe ? "border-primary bg-primary" : "border-primary/30 bg-transparent"
+            }`}>
             {rememberMe && <span className="text-primary-foreground text-xs font-bold">✓</span>}
           </div>
           <span className="text-muted-foreground text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
