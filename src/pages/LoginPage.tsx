@@ -70,11 +70,13 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
 
       <div className="space-y-4">
         <div>
-          <label className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <label htmlFor="username" className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
             Nome
           </label>
           <input
             type="text"
+            id="username"
+            name="username"
             autoComplete="name"
             placeholder="Digite seu nome"
             value={name}
