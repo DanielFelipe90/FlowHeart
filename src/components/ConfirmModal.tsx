@@ -1,4 +1,5 @@
 import { X, AlertTriangle } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
 interface ConfirmModalProps {
   title: string;
@@ -26,9 +27,16 @@ export function ConfirmModal({ title, message, confirmLabel = "Confirmar", onCon
               {title}
             </h3>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
-            <X size={18} />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X size={18} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span>Fechar</span>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         <p className="text-muted-foreground text-sm mb-6" style={{ fontFamily: "'Inter', sans-serif" }}>

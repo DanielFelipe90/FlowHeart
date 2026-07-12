@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
 interface PasswordInputProps {
   value: string;
@@ -31,13 +32,20 @@ export function PasswordInput({ value, onChange, placeholder, id, label }: Passw
           className="w-full rounded-xl border border-border bg-input-background px-4 py-3 text-foreground outline-none focus:border-primary transition-all pr-10"
           style={{ fontFamily: "'Inter', sans-serif" }}
         />
-        <button
-          type="button"
-          onClick={() => setShow((v) => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {show ? <EyeOff size={16} /> : <Eye size={16} />}
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => setShow((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {show ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <span>{show ? "Ocultar senha" : "Mostrar senha"}</span>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );

@@ -83,7 +83,15 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground select-none;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  input, textarea {
+    @apply select-text;
   }
 
   html {

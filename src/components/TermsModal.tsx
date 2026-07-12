@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { X, ShieldCheck } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
 interface TermsModalProps {
   onAccept: () => void;
@@ -34,9 +35,16 @@ export function TermsModal({ onAccept, onClose }: TermsModalProps) {
               TERMOS DE USO
             </h3>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
-            <X size={18} />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X size={18} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span>Fechar</span>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Conteúdo com scroll */}

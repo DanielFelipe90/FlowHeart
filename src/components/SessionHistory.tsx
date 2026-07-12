@@ -2,6 +2,7 @@ import { AlertCircle, Calendar, Bike, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { WorkoutSession } from "../types";
 import { ConfirmModal } from "./ConfirmModal";
+import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
 interface SessionHistoryProps {
   sessions: WorkoutSession[];
@@ -61,12 +62,19 @@ export function SessionHistory({ sessions, onSelect, onDelete }: SessionHistoryP
                     IHB
                   </span>
                 )}
-                <button
-                  onClick={(e) => { e.stopPropagation(); setDeleteId(s.id); }}
-                  className="w-8 h-8 rounded-full flex items-center justify-center bg-secondary text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all shrink-0"
-                >
-                  <Trash2 size={14} />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDeleteId(s.id); }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center bg-secondary text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all shrink-0"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-destructive">
+                    <span>Excluir treino</span>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
 
@@ -103,9 +111,9 @@ export function SessionHistory({ sessions, onSelect, onDelete }: SessionHistoryP
 
       {deleteId && (
         <ConfirmModal
-          title="APAGAR TREINO"
-          message="Tem certeza que deseja apagar este treino? Esta ação não pode ser desfeita."
-          confirmLabel="APAGAR"
+          title="Excluir Treino"
+          message="Tem certeza que deseja excluir este treino? Esta ação não pode ser desfeita."
+          confirmLabel="EXCLUIR"
           danger
           onConfirm={() => onDelete(deleteId)}
           onClose={() => setDeleteId(null)}

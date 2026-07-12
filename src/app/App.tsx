@@ -87,7 +87,7 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen w-full bg-background"
+      className="min-h-screen w-full bg-background select-none"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
       {page.tag !== "onboarding" &&

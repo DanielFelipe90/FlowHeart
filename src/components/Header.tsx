@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Menu } from "lucide-react";
 import { Drawer } from "./Drawer";
 import type { AppPage } from "../types";
+import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
 interface HeaderProps {
   page: AppPage;
@@ -28,12 +29,19 @@ export function Header({ page, setPage, userName, onLogout }: HeaderProps) {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="text-muted-foreground hover:text-primary transition-colors p-2 rounded-lg hover:bg-secondary"
-        >
-          <Menu size={22} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="text-muted-foreground hover:text-primary transition-colors p-2 rounded-lg hover:bg-secondary"
+            >
+              <Menu size={22} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <span>Menu</span>
+          </TooltipContent>
+        </Tooltip>
       </header>
 
       <Drawer
