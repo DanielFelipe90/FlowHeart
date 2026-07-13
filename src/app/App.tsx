@@ -13,6 +13,9 @@ import { LoginPage } from "../pages/LoginPage";
 import { PerfilPage } from "../pages/PerfilPage";
 import { EstatisticasPage } from "../pages/EstatisticasPage";
 import { isAuthenticated, apiGetMe, clearToken } from "../utils/api";
+import { clearUserName } from "../utils/storage";
+import { useInactivity } from "../hooks/useInactivity";
+import { useSessionLifecycle } from "../hooks/useSessionLifecycle";
 
 // ─── Helper de navegação ──────────────────────────────────────────────────────
 
@@ -27,6 +30,7 @@ function navigate(setPage: (p: AppPage) => void, page: AppPage) {
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function App() {
+
   const [page, setPage] = useState<AppPage>({ tag: "onboarding" });
 
   const {
@@ -75,8 +79,8 @@ export default function App() {
     navigate(setPage, { tag: "history" });
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout(); // Hook gerencia limpeza e backend
     navigate(setPage, { tag: "onboarding" });
   };
 
@@ -84,6 +88,9 @@ export default function App() {
     await deleteAccount();
     navigate(setPage, { tag: "onboarding" });
   };
+
+  useInactivity(handleLogout);
+  useSessionLifecycle(); // Monitoriza fechamento de janela
 
   return (
     <div

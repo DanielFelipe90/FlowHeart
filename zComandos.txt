@@ -1,3 +1,10 @@
+--------------------- COMO RODAR O CÓDIGO ---------------------------------------------------
+Se houver alterações primeiro roda build
+pnpm build
+Depois roda ao app
+pnpm preview
+----------------------------------------------------------------------------------------------
+
 -- Como voltar para uma versão anterior do git
 Pelo Terminal (mais seguro):
 1. Abra o terminal integrado no VS Code (Ctrl + ').

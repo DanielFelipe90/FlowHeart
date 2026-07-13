@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { saveUserName, loadUserName, clearUserName } from "../utils/storage";
 import { apiGetSessions, apiCreateSession, apiDeleteSession, apiDeleteAccount, clearToken } from "../utils/api";
 import type { WorkoutSession, PreState, DuringState, PostState } from "../types";
+import { apiLogout } from "../utils/api";
 
 /**
  * useWorkout — Hook central de lógica de negócio do FlowHeart
@@ -120,11 +121,17 @@ export function useWorkout() {
   /**
    * Desloga o usuário — limpa token e estado local.
    */
-  function logout() {
-    clearToken();
-    clearUserName();
-    setUserName("");
-    setSessions([]);
+  async function logout() {
+    try {
+      await apiLogout();
+    } catch (error) {
+      console.error("Erro ao notificar logout ao servidor:", error);
+    } finally {
+      clearToken();
+      clearUserName();
+      setUserName("");
+      setSessions([]);
+    }
   }
 
   /**

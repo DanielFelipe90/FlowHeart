@@ -168,3 +168,18 @@ export async function apiDownloadReport(userName: string): Promise<void> {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+export async function apiLogout(): Promise<void> {
+  const token = loadToken();
+  if (!token) return;
+
+  try {
+    await apiFetch("/auth/logout", { 
+      method: "POST",
+      // Garante que o corpo tenha a chave "token" exigida pelo schema
+      body: JSON.stringify({ token: token }) 
+    });
+  } catch (error) {
+    console.error("Erro ao notificar logout:", error);
+  }
+}
