@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
-const INACTIVITY_TIMEOUT = 25 * 60 * 1000; // 25 min
-const MODAL_TIMEOUT = 2 * 60 * 1000;  // 2 min
+const INACTIVITY_TIMEOUT = 25 * 60 * 1000;
+const MODAL_TIMEOUT = 5 * 60 * 1000;
+// 5 * 60 * 1000;  5 min
+// 25 * 60 * 1000; 25 min
+// 5 * 1000; 5 segundos para teste
 
 // useInactivity.ts
 export function useInactivity(onInactive: () => void, enabled: boolean) { // Adicionado enabled

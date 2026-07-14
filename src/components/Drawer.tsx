@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Home, History, User, LogOut, BarChart2 } from "lucide-react";
+import { ConfirmModal } from "./ConfirmModal";
 import type { AppPage } from "../types";
 
 interface DrawerProps {
@@ -18,6 +20,8 @@ const navItems = [
 ];
 
 export function Drawer({ isOpen, onClose, page, setPage, onLogout }: DrawerProps) {
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   const handleNavigate = (tag: AppPage["tag"]) => {
     setPage({ tag } as AppPage);
     onClose();
@@ -25,7 +29,6 @@ export function Drawer({ isOpen, onClose, page, setPage, onLogout }: DrawerProps
 
   return (
     <>
-      {/* Overlay escuro */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 transition-opacity"
@@ -34,7 +37,6 @@ export function Drawer({ isOpen, onClose, page, setPage, onLogout }: DrawerProps
         />
       )}
 
-      {/* Painel lateral */}
       <div
         className="fixed top-0 right-0 h-full z-50 flex flex-col transition-transform duration-300 bg-card border-l border-border"
         style={{
@@ -42,7 +44,6 @@ export function Drawer({ isOpen, onClose, page, setPage, onLogout }: DrawerProps
           transform: isOpen ? "translateX(0)" : "translateX(100%)",
         }}
       >
-        {/* Itens de navegação */}
         <nav className="flex flex-col gap-1 p-4 flex-1">
           {navItems.map(({ tag, label, icon: Icon }) => {
             const isActive = page.tag === tag;
@@ -50,11 +51,10 @@ export function Drawer({ isOpen, onClose, page, setPage, onLogout }: DrawerProps
               <button
                 key={tag}
                 onClick={() => handleNavigate(tag)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left w-full ${
-                  isActive
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left w-full ${isActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-primary"
-                }`}
+                  }`}
               >
                 <Icon size={18} />
                 <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem" }}>
@@ -67,21 +67,28 @@ export function Drawer({ isOpen, onClose, page, setPage, onLogout }: DrawerProps
             );
           })}
 
-          {/* Separador */}
           <div className="my-2 border-t border-border" />
 
-          {/* Botão sair */}
           <button
-            onClick={() => { onLogout(); onClose(); }}
+            onClick={() => setShowLogoutModal(true)}
             className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left w-full text-destructive hover:bg-destructive/10"
           >
             <LogOut size={18} />
-            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem" }}>
-              Sair da conta
-            </span>
+            <span>Sair da conta</span>
           </button>
         </nav>
       </div>
+
+      {showLogoutModal && (
+        <ConfirmModal
+          title="Sair da conta"
+          message="Tem certeza que deseja sair? Você precisará realizar o login novamente."
+          confirmLabel="Sair"
+          danger={true}
+          onConfirm={onLogout}
+          onClose={() => setShowLogoutModal(false)}
+        />
+      )}
     </>
   );
 }

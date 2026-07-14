@@ -1,5 +1,5 @@
-import { X, AlertTriangle } from "lucide-react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
+import { AlertTriangle } from "lucide-react";
+import { createPortal } from "react-dom"; // Importação necessária
 
 interface ConfirmModalProps {
   title: string;
@@ -11,12 +11,14 @@ interface ConfirmModalProps {
 }
 
 export function ConfirmModal({ title, message, confirmLabel = "Confirmar", onConfirm, onClose, danger = false }: ConfirmModalProps) {
-  return (
+  
+  // O conteúdo do modal que será renderizado fora da hierarquia do Drawer
+  const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center px-4"
       style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
     >
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <AlertTriangle size={18} className={danger ? "text-destructive" : "text-accent"} />
@@ -27,16 +29,6 @@ export function ConfirmModal({ title, message, confirmLabel = "Confirmar", onCon
               {title}
             </h3>
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
-                <X size={18} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <span>Fechar</span>
-            </TooltipContent>
-          </Tooltip>
         </div>
 
         <p className="text-muted-foreground text-sm mb-6" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -68,4 +60,7 @@ export function ConfirmModal({ title, message, confirmLabel = "Confirmar", onCon
       </div>
     </div>
   );
+
+  // Renderiza no final do body ou em um elemento raiz dedicado
+  return createPortal(modalContent, document.body);
 }

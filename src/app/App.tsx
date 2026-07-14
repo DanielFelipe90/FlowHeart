@@ -72,9 +72,16 @@ export default function App() {
   };
 
   const handleLogout = useCallback(async () => {
+    // 1. Limpeza no servidor e estado local
     await logout();
-    window.location.href = "/onboarding";
-  }, [logout]);
+
+    // 2. Limpa o histórico do navegador para que o "Voltar" não funcione
+    // Isso substitui a entrada atual no histórico pela de onboarding
+    window.history.replaceState(null, "", "/onboarding");
+
+    // 3. Executa a transição visual
+    navigate(setPage, { tag: "onboarding" });
+  }, [logout, setPage]);
 
   const handleDeleteAccount = async () => {
     await deleteAccount();
