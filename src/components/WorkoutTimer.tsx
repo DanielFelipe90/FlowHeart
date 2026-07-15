@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, RotateCcw } from "lucide-react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
 interface WorkoutTimerProps {
   onTimeChange: (seconds: number) => void;
@@ -10,6 +9,21 @@ export function WorkoutTimer({ onTimeChange }: WorkoutTimerProps) {
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Lógica de disparo da notificação ao clicar em Play
+  const handlePlay = () => {
+    // Se não estiver rodando e vamos iniciar
+    if (!running) {
+      if (Notification.permission === "granted") {
+        new Notification("FlowHeart: Treino Iniciado", {
+          body: "Seu treino começou. Estamos monitorando seu tempo!",
+          tag: "workout-status",
+          icon: "/favicon.ico" // Certifique-se que o caminho está correto
+        } as NotificationOptions);
+      }
+    }
+    setRunning((r) => !r);
+  };
 
   useEffect(() => {
     if (running) {
@@ -60,10 +74,9 @@ export function WorkoutTimer({ onTimeChange }: WorkoutTimerProps) {
 
         <div className="flex gap-2">
           <button
-            onClick={() => setRunning((r) => !r)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-              running ? "bg-accent text-white" : "bg-primary text-primary-foreground"
-            }`}
+            onClick={handlePlay}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${running ? "bg-accent text-white" : "bg-primary text-primary-foreground"
+              }`}
           >
             {running ? <Pause size={18} /> : <Play size={18} />}
           </button>

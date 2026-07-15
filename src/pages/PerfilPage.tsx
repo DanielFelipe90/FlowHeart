@@ -23,6 +23,17 @@ export function PerfilPage({ userName, onDeleteAccount }: PerfilPageProps) {
 
   const initials = userName.slice(0, 2).toUpperCase();
 
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      alert("Este navegador não suporta notificações.");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+      alert("Notificações ativadas com sucesso!");
+    }
+  };
+
   return (
     <div className="space-y-6 flex flex-col min-h-[70vh]">
       <div className="space-y-4 flex flex-col items-center mb-8">
@@ -62,7 +73,15 @@ export function PerfilPage({ userName, onDeleteAccount }: PerfilPageProps) {
         <span className="text-foreground font-semibold">
           {userName.toUpperCase()}
         </span>
+
+        <button
+          onClick={requestNotificationPermission}
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg"
+        >
+          Ativar Notificações
+        </button>
       </div>
+
 
       <DeleteAccount onDelete={onDeleteAccount} />
     </div>

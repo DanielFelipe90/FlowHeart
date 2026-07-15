@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import { Activity, Bike, ChevronRight, CheckCircle2 } from "lucide-react";
 import { MetricInput } from "../components/MetricInput";
 import { BloodPressureInput } from "../components/BloodPressureInput";
@@ -7,6 +6,8 @@ import { IHBToggle } from "../components/IHBToggle";
 import { PhaseHeader } from "../components/PhaseHeader";
 import { StepIndicator } from "../components/StepIndicator";
 import type { AppPage, Phase, PreState, DuringState, PostState } from "../types";
+import { useInactivityHeartbeat } from "../hooks/useInactivityHeartbeat";
+import { useWorkoutNotifications } from "../hooks/useWorkoutNotifications";
 
 interface WorkoutPageProps {
   phase: Phase;
@@ -24,38 +25,8 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
   const canAdvanceDuring = during.bpm;
   const canSavePost = post.systolic && post.diastolic && post.bpm;
 
-  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const resetInactivityRef = useRef(resetInactivity);
-
-  useEffect(() => {
-    resetInactivityRef.current = resetInactivity;
-  }, [resetInactivity]);
-
-  useEffect(() => {
-    if (phase === "during") {
-      if (!heartbeatRef.current) {
-        console.log("Iniciando heartbeat persistente");
-        heartbeatRef.current = setInterval(() => {
-          resetInactivityRef.current();
-          console.log("Heartbeat persistente 45s - resetInactivity chamado");
-        }, 45000);
-      }
-    } else {
-      if (heartbeatRef.current) {
-        console.log("Parando heartbeat persistente");
-        clearInterval(heartbeatRef.current);
-        heartbeatRef.current = null;
-      }
-    }
-
-    return () => {
-      if (heartbeatRef.current) {
-        console.log("Limpando heartbeat persistente no cleanup");
-        clearInterval(heartbeatRef.current);
-        heartbeatRef.current = null;
-      }
-    };
-  }, [phase]); // só depende de phase agora
+  useInactivityHeartbeat(phase, resetInactivity);
+  useWorkoutNotifications(phase, during.timeSeconds);
 
   return (
     <div>
