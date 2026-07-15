@@ -1,6 +1,7 @@
 import { useContainerWidth } from "./SimpleLineChart";
 import { SimpleLineChart } from "./SimpleLineChart";
 
+// Props para o componente ChartCard
 interface ChartSeries {
   values: number[];
   color: string;
@@ -8,6 +9,7 @@ interface ChartSeries {
   label: string;
 }
 
+// Props para o componente ChartCard
 interface ChartCardProps {
   title: string;
   icon: React.ReactNode;
@@ -18,6 +20,8 @@ interface ChartCardProps {
 }
 
 export function ChartCard({ title, icon, id, series, labels, unit }: ChartCardProps) {
+
+  // Hook personalizado para obter a largura do contêiner, usado para renderizar o gráfico responsivamente
   const { ref, width } = useContainerWidth();
 
   return (

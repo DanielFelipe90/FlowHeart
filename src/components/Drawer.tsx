@@ -3,6 +3,7 @@ import { Home, History, User, LogOut, BarChart2 } from "lucide-react";
 import { ConfirmModal } from "./ConfirmModal";
 import type { AppPage } from "../types";
 
+// Props para o componente Drawer
 interface DrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,6 +13,7 @@ interface DrawerProps {
   onLogout: () => void;
 }
 
+// Itens de navegação do Drawer, cada item possui uma tag, um rótulo e um ícone
 const navItems = [
   { tag: "home" as const, label: "Início", icon: Home },
   { tag: "history" as const, label: "Histórico", icon: History },
@@ -20,8 +22,11 @@ const navItems = [
 ];
 
 export function Drawer({ isOpen, onClose, page, setPage, onLogout }: DrawerProps) {
+
+  // Estado para controlar se o modal de confirmação de logout está visível
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  // Função que lida com a navegação, atualizando a página atual e fechando o drawer
   const handleNavigate = (tag: AppPage["tag"]) => {
     setPage({ tag } as AppPage);
     onClose();
@@ -29,6 +34,7 @@ export function Drawer({ isOpen, onClose, page, setPage, onLogout }: DrawerProps
 
   return (
     <>
+      {/* Renderiza o fundo escuro e desfocado quando o drawer está aberto, e fecha o drawer ao clicar nele */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 transition-opacity"

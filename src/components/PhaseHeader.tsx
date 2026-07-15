@@ -1,9 +1,11 @@
 import type { Phase } from "../types";
 
+// Props para o componente PhaseHeader
 interface PhaseHeaderProps {
   phase: Phase;
 }
 
+// Configurações para cada fase do treino, incluindo rótulo, cor, etapa e descrição
 const configs = {
   pre:    { label: "Pré-Treino",       color: "#7a8099", step: 1, desc: "Registre seus dados antes de iniciar" },
   during: { label: "Durante o Treino", color: "#ff5733", step: 2, desc: "Acompanhe seus dados durante o esforço" },
@@ -11,7 +13,10 @@ const configs = {
 };
 
 export function PhaseHeader({ phase }: PhaseHeaderProps) {
+
+  // Obtém as configurações correspondentes à fase atual
   const c = configs[phase];
+  
   return (
     <div className="mb-6">
       <div className="flex items-center gap-2 mb-1">

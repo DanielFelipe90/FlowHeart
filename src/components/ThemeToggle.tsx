@@ -1,8 +1,10 @@
 import { Sun, Moon } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
+// Props para o componente ThemeToggle
 export type Theme = "light" | "dark";
 
+// Props para o componente ThemeToggle
 interface ThemeToggleProps {
   theme: Theme;
   onToggle: () => void;

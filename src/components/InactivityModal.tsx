@@ -1,4 +1,6 @@
 export function InactivityModal({ isOpen, onKeepAlive }: { isOpen: boolean, onKeepAlive: () => void }) {
+
+    // Se o modal não estiver aberto, não renderiza nada
     if (!isOpen) return null;
 
     return (

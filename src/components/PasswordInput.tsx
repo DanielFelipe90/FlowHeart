@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
+// Props para o componente PasswordInput
 interface PasswordInputProps {
   value: string;
   onChange: (v: string) => void;
@@ -11,6 +12,8 @@ interface PasswordInputProps {
 }
 
 export function PasswordInput({ value, onChange, placeholder, id, label }: PasswordInputProps) {
+
+  // Estado para controlar se a senha está visível ou oculta
   const [show, setShow] = useState(false);
 
   return (

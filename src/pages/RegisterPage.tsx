@@ -4,6 +4,7 @@ import { apiRegister, saveToken } from "../utils/api";
 import { PasswordInput } from "../components/PasswordInput";
 import { TermsModal } from "../components/TermsModal";
 
+// Props para o componente RegisterPage
 interface RegisterPageProps {
   setUserName: (name: string) => void;
   setPage: (page: AppPage) => void;
@@ -11,6 +12,8 @@ interface RegisterPageProps {
 }
 
 export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps) {
+
+  // Estados para armazenar os valores dos campos e mensagens de erro
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,10 +21,9 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-
   const canRegister = name.trim() && password.length === 6 && confirmPassword.length === 6;
 
-  // Função centralizada para realizar o registro
+  // Função para lidar com o registro do usuário
   const handleRegister = async () => {
     setErrorMessage("");
     setLoading(true);

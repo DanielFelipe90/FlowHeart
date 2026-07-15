@@ -60,37 +60,38 @@ export default function App() {
       });
   }, []);
 
+  // Função para iniciar um novo treino e navegar para a fase "pre"
   const handleStartWorkout = () => {
     startNewWorkout();
     navigate(setPage, { tag: "workout", phase: "pre" });
   };
 
+  // Função para salvar a sessão de treino e navegar para a página de histórico
   const handleSaveAndNavigate = async () => {
     await saveSession();
     navigate(setPage, { tag: "history" });
   };
 
+  // Função para lidar com logout, incluindo limpeza de token, histórico do navegador e transição visual para a página de onboarding
   const handleLogout = useCallback(async () => {
-    // 1. Limpeza no servidor e estado local
     await logout();
-
-    // 2. Limpa o histórico do navegador para que o "Voltar" não funcione
-    // Isso substitui a entrada atual no histórico pela de onboarding
     window.history.replaceState(null, "", "/onboarding");
-
-    // 3. Executa a transição visual
     navigate(setPage, { tag: "onboarding" });
   }, [logout, setPage]);
 
+  // Função para lidar com a exclusão da conta do usuário, incluindo navegação para a página de onboarding após a exclusão
   const handleDeleteAccount = async () => {
     await deleteAccount();
     navigate(setPage, { tag: "onboarding" });
   };
 
-  useSessionLifecycle(); // Monitoriza fechamento de janela
+  // Hook customizado para monitorar o ciclo de vida da sessão, incluindo eventos de fechamento da janela
+  useSessionLifecycle();
 
+  // Hook customizado para lidar com inatividade do usuário, mostrando um modal de aviso e permitindo que o usuário continue logado
   const { showModal, setShowModal, resetInactivity } = useInactivity(handleLogout, isLoggedIn);
   
+  // Função para lidar com a ação de "continuar logado" no modal de inatividade, fechando o modal e resetando o temporizador de inatividade
   const handleKeepAlive = () => {
     setShowModal(false);
     resetInactivity();
@@ -99,6 +100,8 @@ export default function App() {
   return (
 
     <>
+
+      {/** Renderiza o modal de inatividade apenas se o usuário estiver logado e o modal estiver visível */}
       {isLoggedIn && (
         <InactivityModal isOpen={showModal} onKeepAlive={handleKeepAlive} />
       )}

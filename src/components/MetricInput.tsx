@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+// Props para o componente MetricInput
 interface MetricInputProps {
   label: string;
   unit: string;
@@ -12,6 +13,8 @@ interface MetricInputProps {
 }
 
 export function MetricInput({ label, unit, value, onChange, placeholder, icon, min, max }: MetricInputProps) {
+
+  // Estado para controlar se o input está focado, para aplicar estilos de foco
   const [focused, setFocused] = useState(false);
 
   return (

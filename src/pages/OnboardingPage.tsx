@@ -2,6 +2,7 @@ import type { AppPage } from "../types";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useTheme } from "../hooks/useTheme";
 
+// Props para o componente OnboardingPage
 interface OnboardingPageProps {
   setPage: (page: AppPage) => void;
 }

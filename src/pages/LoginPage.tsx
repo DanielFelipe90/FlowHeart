@@ -3,7 +3,7 @@ import type { AppPage } from "../types";
 import { apiLogin, saveToken } from "../utils/api";
 import { PasswordInput } from "../components/PasswordInput";
 
-
+// Props para o componente LoginPage
 interface LoginPageProps {
   setUserName: (name: string) => void;
   setPage: (page: AppPage) => void;
@@ -11,6 +11,8 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
+
+  // Estados para armazenar os valores dos campos, mensagens de erro, tentativas de login e bloqueio temporário
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -19,9 +21,13 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
   const [attempts, setAttempts] = useState(0);
   const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
 
+  // Valida se o usuário pode tentar fazer login (nome preenchido e senha com 6 caracteres)
   const canLogin = name.trim() && password.length === 6;
+
+  // Verifica se o usuário está temporariamente bloqueado devido a muitas tentativas de login
   const isBlocked = blockedUntil !== null && Date.now() < blockedUntil;
 
+  // Função para lidar com o login do usuário, incluindo validação de tentativas e bloqueio temporário
   const handleLogin = async () => {
     if (isBlocked) {
       const remaining = Math.ceil((blockedUntil! - Date.now()) / 1000 / 60);
@@ -29,7 +35,9 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
       return;
     }
 
+    // Limpa mensagens de erro e inicia o estado de carregamento
     setLoading(true);
+    // Limpa mensagens de erro
     try {
       const token = await apiLogin(name, password);
       saveToken(token, rememberMe);
@@ -38,14 +46,18 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
       setUserName(name);
       setPage({ tag: "home" });
     } catch (err: unknown) {
+      // Incrementa o contador de tentativas e verifica se o usuário deve ser bloqueado
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
+      // Se o usuário exceder 5 tentativas, bloqueia por 5 minutos
       if (newAttempts >= 5) {
         setBlockedUntil(Date.now() + 5 * 60 * 1000);
         setErrorMessage("Muitas tentativas. Tente novamente em 5 minutos.");
       } else {
+        // Mostra mensagem de erro com o número de tentativas restantes
         setErrorMessage(`Nome ou senha incorretos. Tentativa ${newAttempts} de 5.`);
       }
+      // Limpa a senha para segurança
     } finally {
       setLoading(false);
     }

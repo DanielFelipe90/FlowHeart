@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 
+// Props para o componente IHBToggle
 interface IHBToggleProps {
   value: boolean;
   onChange: (v: boolean) => void;

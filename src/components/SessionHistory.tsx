@@ -4,12 +4,14 @@ import type { WorkoutSession } from "../types";
 import { ConfirmModal } from "./ConfirmModal";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
+// Props para o componente SessionHistory
 interface SessionHistoryProps {
   sessions: WorkoutSession[];
   onSelect: (s: WorkoutSession) => void;
   onDelete: (id: string) => void;
 }
 
+// Função auxiliar para formatar o tempo em segundos para um formato legível
 function fmtTime(s: number) {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
@@ -19,8 +21,11 @@ function fmtTime(s: number) {
 }
 
 export function SessionHistory({ sessions, onSelect, onDelete }: SessionHistoryProps) {
+
+  // Estado para controlar qual sessão está sendo excluída
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // Renderiza uma mensagem amigável quando não há sessões registradas
   if (sessions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">

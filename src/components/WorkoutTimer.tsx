@@ -1,47 +1,55 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, RotateCcw } from "lucide-react";
 
+// Props para o componente WorkoutTimer
 interface WorkoutTimerProps {
   onTimeChange: (seconds: number) => void;
 }
 
 export function WorkoutTimer({ onTimeChange }: WorkoutTimerProps) {
+  // Estado interno do timer
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Lógica de disparo da notificação ao clicar em Play
   const handlePlay = () => {
-    // Se não estiver rodando e vamos iniciar
     if (!running) {
       if (Notification.permission === "granted") {
         new Notification("FlowHeart: Treino Iniciado", {
           body: "Seu treino começou. Estamos monitorando seu tempo!",
           tag: "workout-status",
-          icon: "/favicon.ico" // Certifique-se que o caminho está correto
+          icon: "/favicon.ico"
         } as NotificationOptions);
       }
     }
     setRunning((r) => !r);
   };
 
+  // Lógica do timer
   useEffect(() => {
+    // Inicia ou para o timer com base no estado "running"
     if (running) {
+      // Inicia o intervalo para incrementar os segundos a cada segundo
       intervalRef.current = setInterval(() => {
         setSeconds((s) => s + 1);
       }, 1000);
     } else {
+      // Para o intervalo quando o timer não está rodando
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
+    // Limpa o intervalo quando o componente é desmontado
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [running]);
 
+  // Atualiza o tempo para o componente pai sempre que os segundos mudarem
   useEffect(() => {
     onTimeChange(seconds);
   }, [seconds]);
 
+  // Formata o tempo em hh:mm:ss
   const fmt = (s: number) => {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
@@ -51,6 +59,7 @@ export function WorkoutTimer({ onTimeChange }: WorkoutTimerProps) {
     return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
   };
 
+  // Reseta o timer e para a contagem
   const reset = () => {
     setRunning(false);
     setSeconds(0);

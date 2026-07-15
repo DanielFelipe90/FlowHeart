@@ -9,6 +9,7 @@ import type { AppPage, Phase, PreState, DuringState, PostState } from "../types"
 import { useInactivityHeartbeat } from "../hooks/useInactivityHeartbeat";
 import { useWorkoutNotifications } from "../hooks/useWorkoutNotifications";
 
+// Props para o componente WorkoutPage
 interface WorkoutPageProps {
   phase: Phase;
   pre: PreState; setPre: React.Dispatch<React.SetStateAction<PreState>>;
@@ -20,12 +21,17 @@ interface WorkoutPageProps {
 }
 
 export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPost, setPage, saveSession, resetInactivity }: WorkoutPageProps) {
-  console.log("WorkoutPage renderizou!"); // Se isso aparecer a cada segundo, temos o culpado
+  console.log("WorkoutPage renderizou!");
+
+  // Determina se os botões de avançar ou salvar devem estar habilitados
   const canAdvancePre = pre.systolic && pre.diastolic && pre.bpm;
   const canAdvanceDuring = during.bpm;
   const canSavePost = post.systolic && post.diastolic && post.bpm;
 
+  // Hooks customizados para lidar com inatividade e notificações durante o treino
   useInactivityHeartbeat(phase, resetInactivity);
+
+  // Hook customizado para lidar com notificações durante o treino
   useWorkoutNotifications(phase, during.timeSeconds);
 
   return (

@@ -1,6 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import { createPortal } from "react-dom"; // Importação necessária
 
+// Props para o componente ConfirmModal
 interface ConfirmModalProps {
   title: string;
   message: string;
@@ -12,7 +13,7 @@ interface ConfirmModalProps {
 
 export function ConfirmModal({ title, message, confirmLabel = "Confirmar", onConfirm, onClose, danger = false }: ConfirmModalProps) {
   
-  // O conteúdo do modal que será renderizado fora da hierarquia do Drawer
+  // Renderiza o conteúdo do modal de confirmação, incluindo título, mensagem e botões de ação
   const modalContent = (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center px-4"

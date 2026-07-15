@@ -3,11 +3,14 @@ import { Trash2 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 import { ConfirmModal } from "./ConfirmModal";
 
+// Props para o componente DeleteAccount
 interface DeleteAccountProps {
   onDelete: () => void;
 }
 
 export function DeleteAccount({ onDelete }: DeleteAccountProps) {
+  
+  // Estado para controlar se o modal de confirmação de exclusão da conta está visível
   const [showModal, setShowModal] = useState(false);
 
   return (

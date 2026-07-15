@@ -3,11 +3,13 @@ import { ArrowLeft, Clock, Bike } from "lucide-react";
 import type { WorkoutSession } from "../types";
 import { SimpleLineChart, useContainerWidth } from "./SimpleLineChart";
 
+// Props para o componente SessionDetail
 interface SessionDetailProps {
   session: WorkoutSession;
   onBack: () => void;
 }
 
+// Função auxiliar para formatar o tempo em segundos para um formato legível
 function fmtTime(s: number) {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
@@ -16,11 +18,15 @@ function fmtTime(s: number) {
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
+// Componente principal que exibe os detalhes de uma sessão de treino
 const PHASE_LABELS = ["Pré", "Durante", "Pós"];
 
 export function SessionDetail({ session, onBack }: SessionDetailProps) {
+
+  // Hook customizado para obter a largura do contêiner, usado para dimensionar o gráfico de BPM
   const bpmRef = useContainerWidth();
 
+  // Array de valores de BPM para cada fase do treino, garantindo que sejam números válidos
   const bpmValues = [
     Number(session.pre.bpm) || 0,
     Number(session.during.bpm) || 0,

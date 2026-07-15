@@ -2,6 +2,7 @@ import { SessionHistory } from "../components/SessionHistory";
 import type { WorkoutSession, AppPage } from "../types";
 import { ArrowLeft } from "lucide-react";
 
+// Props para o componente HistoryPage
 interface HistoryPageProps {
   sessions: WorkoutSession[];
   setPage: (page: AppPage) => void;

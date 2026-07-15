@@ -2,16 +2,18 @@ import { useEffect } from "react";
 import { X, ShieldCheck } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
+// Props para o componente TermsModal
 interface TermsModalProps {
   onAccept: () => void;
   onClose: () => void;
 }
 
 export function TermsModal({ onAccept, onClose }: TermsModalProps) {
+
+  // Efeito para bloquear o scroll do body quando o modal está aberto
   useEffect(() => {
     // Bloqueia o scroll do body quando o modal é montado
     document.body.style.overflow = "hidden";
-
     // Restaura o scroll quando o modal é fechado (desmontado)
     return () => {
       document.body.style.overflow = "unset";

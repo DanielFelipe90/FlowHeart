@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FileDown, Loader2 } from "lucide-react";
 
+// Props para o componente ReportButton
 interface ReportButtonProps {
   onGenerate: () => Promise<void>;
   disabled?: boolean;
@@ -13,9 +14,11 @@ interface ReportButtonProps {
  * Pode ser usado em qualquer página que precise gerar um relatório.
  */
 export function ReportButton({ onGenerate, disabled = false, label = "Exportar PDF" }: ReportButtonProps) {
+  // Estado para controlar o loading e mensagens de erro
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Função que lida com o clique no botão, chamando a função de geração de relatório
   const handleClick = async () => {
     setLoading(true);
     setError("");

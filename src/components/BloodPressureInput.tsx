@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Heart } from "lucide-react";
 
+// Props para o componente BloodPressureInput
 interface BloodPressureInputProps {
   systolic: string;
   diastolic: string;
@@ -9,6 +10,8 @@ interface BloodPressureInputProps {
 }
 
 export function BloodPressureInput({ systolic, diastolic, onSystolicChange, onDiastolicChange }: BloodPressureInputProps) {
+  
+  // Estado para controlar qual campo de input está focado, para aplicar estilos de foco
   const [focusedField, setFocusedField] = useState<"sys" | "dia" | null>(null);
 
   return (

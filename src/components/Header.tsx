@@ -4,6 +4,7 @@ import { Drawer } from "./Drawer";
 import type { AppPage } from "../types";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
+// Props para o componente Header
 interface HeaderProps {
   page: AppPage;
   setPage: (page: AppPage) => void;
@@ -12,6 +13,8 @@ interface HeaderProps {
 }
 
 export function Header({ page, setPage, userName, onLogout }: HeaderProps) {
+
+  // Estado para controlar se o drawer (menu lateral) está aberto ou fechado
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (

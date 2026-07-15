@@ -55,8 +55,10 @@ export async function apiFetch(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<Response> {
+  // Carrega o token salvo (se houver) e adiciona no header Authorization
   const token = loadToken();
 
+  // Faz a requisição para a API com o endpoint e opções fornecidas
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -66,6 +68,7 @@ export async function apiFetch(
     },
   });
 
+  // Se a resposta for 401 (não autorizado), limpa o token e lança erro para redirecionar para login
   if (response.status === 401) {
     clearToken();
     throw new Error("UNAUTHORIZED");
@@ -77,50 +80,72 @@ export async function apiFetch(
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export async function apiRegister(name: string, password: string): Promise<string> {
+  // Faz a requisição para registrar o usuário na API
   const res = await apiFetch("/auth/register", {
     method: "POST",
     body: JSON.stringify({ name, password }),
   });
+  // Se a resposta não for OK, tenta extrair a mensagem de erro do corpo da resposta e lança um erro
   if (!res.ok) {
+    // Tenta extrair a mensagem de erro do corpo da resposta
     const err = await res.json();
     throw new Error(err.detail ?? "Erro ao registrar");
   }
+  // Se a resposta for OK, extrai o token do corpo da resposta e retorna
   const data = await res.json();
   return data.access_token;
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Funções de login, logout e gerenciamento de conta
 export async function apiLogin(name: string, password: string): Promise<string> {
+  // Faz a requisição para autenticar o usuário na API
   const res = await apiFetch("/auth/login", {
     method: "POST",
     body: JSON.stringify({ name, password }),
   });
+  // Se a resposta não for OK, tenta extrair a mensagem de erro do corpo da resposta e lança um erro
   if (!res.ok) {
+    // Tenta extrair a mensagem de erro do corpo da resposta
     const err = await res.json();
     throw new Error(err.detail ?? "Nome ou senha incorretos");
   }
+  // Se a resposta for OK, extrai o token do corpo da resposta e retorna
   const data = await res.json();
   return data.access_token;
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+//  Funções para buscar informações do usuário e gerenciar a conta
 export async function apiGetMe(): Promise<{ id: string; name: string }> {
+  // Faz a requisição para buscar informações do usuário autenticado na API
   const res = await apiFetch("/auth/me");
+  // Se a resposta não for OK, lança um erro indicando que houve um problema ao buscar o usuário
   if (!res.ok) throw new Error("Erro ao buscar usuário");
+  // Se a resposta for OK, extrai os dados do usuário do corpo da resposta e retorna
   return res.json();
 }
 
 export async function apiDeleteAccount(): Promise<void> {
+  // Faz a requisição para apagar a conta do usuário autenticado na API
   const res = await apiFetch("/auth/account", { method: "DELETE" });
+  // Se a resposta não for OK, lança um erro indicando que houve um problema ao apagar a conta
   if (!res.ok) throw new Error("Erro ao apagar conta");
 }
 
 // ─── Sessões ──────────────────────────────────────────────────────────────────
 
+// Funções para buscar, criar e apagar sessões de treino
 export async function apiGetSessions(): Promise<unknown[]> {
+  // Faz a requisição para buscar todas as sessões de treino do usuário autenticado na API
   const res = await apiFetch("/sessions/");
+  // Se a resposta não for OK, lança um erro indicando que houve um problema ao buscar as sessões
   if (!res.ok) throw new Error("Erro ao buscar sessões");
+  // Se a resposta for OK, extrai os dados das sessões do corpo da resposta e retorna
   return res.json();
 }
 
+// Função para criar uma nova sessão de treino
 export async function apiCreateSession(session: unknown): Promise<unknown> {
   const res = await apiFetch("/sessions/", {
     method: "POST",
@@ -130,6 +155,7 @@ export async function apiCreateSession(session: unknown): Promise<unknown> {
   return res.json();
 }
 
+// Função para apagar uma sessão de treino pelo ID
 export async function apiDeleteSession(id: string): Promise<void> {
   const res = await apiFetch(`/sessions/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Erro ao apagar sessão");
@@ -169,8 +195,12 @@ export async function apiDownloadReport(userName: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Função para notificar o backend sobre o logout do usuário
 export async function apiLogout(): Promise<void> {
+  // Carrega o token salvo (se houver) e envia para o backend para invalidar a sessão
   const token = loadToken();
+  
   if (!token) return;
 
   try {

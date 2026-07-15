@@ -4,6 +4,7 @@ import { ReportButton } from "../components/ReportButton";
 import { ChartCard } from "../components/ChartCard";
 import { apiDownloadReport } from "../utils/api";
 
+// Props para o componente EstatisticasPage
 interface EstatisticasPageProps {
   sessions: WorkoutSession[];
   userName: string;
@@ -11,8 +12,10 @@ interface EstatisticasPageProps {
 
 
 export function EstatisticasPage({ sessions, userName }: EstatisticasPageProps) {
+  // Gera os rótulos para o eixo X do gráfico, como T1, T2, T3, etc.
   const labels = sessions.map((_, i) => `T${i + 1}`);
 
+  // Se não houver sessões registradas, exibe uma mensagem informando que não há dados para mostrar
   if (sessions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -27,6 +30,7 @@ export function EstatisticasPage({ sessions, userName }: EstatisticasPageProps) 
     );
   }
 
+  // Extrai os dados relevantes das sessões para cada métrica que será exibida nos gráficos
   const bpmPre    = sessions.map((s) => Number(s.pre.bpm) || 0);
   const bpmDuring = sessions.map((s) => Number(s.during.bpm) || 0);
   const bpmPost   = sessions.map((s) => Number(s.post.bpm) || 0);
