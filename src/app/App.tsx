@@ -14,7 +14,6 @@ import { LoginPage } from "../pages/LoginPage";
 import { PerfilPage } from "../pages/PerfilPage";
 import { EstatisticasPage } from "../pages/EstatisticasPage";
 import { isAuthenticated, apiGetMe, clearToken } from "../utils/api";
-import { clearUserName } from "../utils/storage";
 import { useInactivity } from "../hooks/useInactivity";
 import { useSessionLifecycle } from "../hooks/useSessionLifecycle";
 
@@ -34,9 +33,9 @@ export default function App() {
   const [page, setPage] = useState<AppPage>({ tag: "onboarding" });
 
   const {
-    sessions, userName, loadingSession, pre, setPre, during, setDuring, post, setPost,
+    sessions, userName, pre, setPre, during, setDuring, post, setPost,
     handleSetUserName, startNewWorkout, saveSession, deleteSession, logout,
-    deleteAccount, fetchSessions,
+    deleteAccount
   } = useWorkout();
 
   const isLoggedIn = !!userName;
@@ -91,7 +90,7 @@ export default function App() {
   useSessionLifecycle(); // Monitoriza fechamento de janela
 
   const { showModal, setShowModal, resetInactivity } = useInactivity(handleLogout, isLoggedIn);
-
+  
   const handleKeepAlive = () => {
     setShowModal(false);
     resetInactivity();
@@ -158,6 +157,7 @@ export default function App() {
               post={post} setPost={setPost}
               setPage={(p) => navigate(setPage, p)}
               saveSession={handleSaveAndNavigate}
+              resetInactivity={resetInactivity}
             />
           )}
 

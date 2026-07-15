@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Activity, Bike, ChevronRight, CheckCircle2 } from "lucide-react";
 import { MetricInput } from "../components/MetricInput";
 import { BloodPressureInput } from "../components/BloodPressureInput";
@@ -14,12 +15,47 @@ interface WorkoutPageProps {
   post: PostState; setPost: React.Dispatch<React.SetStateAction<PostState>>;
   setPage: (page: AppPage) => void;
   saveSession: () => void;
+  resetInactivity: () => void;
 }
 
-export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPost, setPage, saveSession }: WorkoutPageProps) {
+export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPost, setPage, saveSession, resetInactivity }: WorkoutPageProps) {
+  console.log("WorkoutPage renderizou!"); // Se isso aparecer a cada segundo, temos o culpado
   const canAdvancePre = pre.systolic && pre.diastolic && pre.bpm;
   const canAdvanceDuring = during.bpm;
   const canSavePost = post.systolic && post.diastolic && post.bpm;
+
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const resetInactivityRef = useRef(resetInactivity);
+
+  useEffect(() => {
+    resetInactivityRef.current = resetInactivity;
+  }, [resetInactivity]);
+
+  useEffect(() => {
+    if (phase === "during") {
+      if (!heartbeatRef.current) {
+        console.log("Iniciando heartbeat persistente");
+        heartbeatRef.current = setInterval(() => {
+          resetInactivityRef.current();
+          console.log("Heartbeat persistente 45s - resetInactivity chamado");
+        }, 45000);
+      }
+    } else {
+      if (heartbeatRef.current) {
+        console.log("Parando heartbeat persistente");
+        clearInterval(heartbeatRef.current);
+        heartbeatRef.current = null;
+      }
+    }
+
+    return () => {
+      if (heartbeatRef.current) {
+        console.log("Limpando heartbeat persistente no cleanup");
+        clearInterval(heartbeatRef.current);
+        heartbeatRef.current = null;
+      }
+    };
+  }, [phase]); // só depende de phase agora
 
   return (
     <div>
@@ -59,9 +95,8 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
           <button
             disabled={!canAdvanceDuring}
             onClick={() => setPage({ tag: "workout", phase: "post" })}
-            className={`w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 ${
-              canAdvanceDuring ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
-            }`}
+            className={`w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 ${canAdvanceDuring ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+              }`}
           >
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>FINALIZAR TREINO</span>
             <ChevronRight size={18} />
@@ -84,9 +119,8 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
           <button
             disabled={!canSavePost}
             onClick={saveSession}
-            className={`w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 ${
-              canSavePost ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
-            }`}
+            className={`w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 ${canSavePost ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+              }`}
           >
             <CheckCircle2 size={18} />
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>SALVAR TREINO</span>
