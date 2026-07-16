@@ -175,7 +175,6 @@ export default function App() {
               setPage={(p) => navigate(setPage, p)}
               saveSession={handleSaveAndNavigate}
               resetInactivity={resetInactivity}
-              userId={userId}
             />
           )}
 
