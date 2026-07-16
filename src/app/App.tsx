@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense, lazy } from "react";
 import type { AppPage } from "../types";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
@@ -12,10 +12,15 @@ import { useWorkout } from "../hooks/useWorkout";
 import { RegisterPage } from "../pages/RegisterPage";
 import { LoginPage } from "../pages/LoginPage";
 import { PerfilPage } from "../pages/PerfilPage";
-import { EstatisticasPage } from "../pages/EstatisticasPage";
 import { isAuthenticated, apiGetMe, clearToken } from "../utils/api";
 import { useInactivity } from "../hooks/useInactivity";
 import { useSessionLifecycle } from "../hooks/useSessionLifecycle";
+
+// Lazy: EstatisticasPage puxa o recharts, a dependência mais pesada do bundle.
+// Só carrega o chunk quando o usuário realmente navega até essa página.
+const EstatisticasPage = lazy(() =>
+  import("../pages/EstatisticasPage").then((m) => ({ default: m.EstatisticasPage }))
+);
 
 // ─── Helper de navegação ──────────────────────────────────────────────────────
 
@@ -31,6 +36,8 @@ function navigate(setPage: (p: AppPage) => void, page: AppPage) {
 
 export default function App() {
   const [page, setPage] = useState<AppPage>({ tag: "onboarding" });
+  const [userId, setUserId] = useState<string | null>(null);
+
 
   const {
     sessions, userName, pre, setPre, during, setDuring, post, setPost,
@@ -51,6 +58,7 @@ export default function App() {
     apiGetMe()
       .then(async (user) => {
         handleSetUserName(user.name);
+        setUserId(user.id);
         navigate(setPage, { tag: "home" });
       })
       .catch(() => {
@@ -88,9 +96,15 @@ export default function App() {
   // Hook customizado para monitorar o ciclo de vida da sessão, incluindo eventos de fechamento da janela
   useSessionLifecycle();
 
+  const isWorkoutActive = page.tag === "workout";
+
   // Hook customizado para lidar com inatividade do usuário, mostrando um modal de aviso e permitindo que o usuário continue logado
-  const { showModal, setShowModal, resetInactivity } = useInactivity(handleLogout, isLoggedIn);
-  
+  const { showModal, setShowModal, resetInactivity } = useInactivity(
+    handleLogout,
+    isLoggedIn,
+    userId,
+    isWorkoutActive
+  );
   // Função para lidar com a ação de "continuar logado" no modal de inatividade, fechando o modal e resetando o temporizador de inatividade
   const handleKeepAlive = () => {
     setShowModal(false);
@@ -161,6 +175,7 @@ export default function App() {
               setPage={(p) => navigate(setPage, p)}
               saveSession={handleSaveAndNavigate}
               resetInactivity={resetInactivity}
+              userId={userId}
             />
           )}
 
@@ -181,7 +196,9 @@ export default function App() {
           )}
 
           {page.tag === "estatisticas" && (
-            <EstatisticasPage sessions={sessions} userName={userName} />
+            <Suspense fallback={<div className="text-center py-10 text-muted-foreground">Carregando estatísticas…</div>}>
+              <EstatisticasPage sessions={sessions} userName={userName} />
+            </Suspense>
           )}
 
           {page.tag === "perfil" && (
