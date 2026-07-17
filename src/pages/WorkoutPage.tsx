@@ -18,9 +18,10 @@ interface WorkoutPageProps {
   setPage: (page: AppPage) => void;
   saveSession: () => void;
   resetInactivity: () => void;
+  onTimerRunningChange: (running: boolean) => void;
 }
 
-export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPost, setPage, saveSession, resetInactivity }: WorkoutPageProps) {
+export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPost, setPage, saveSession, resetInactivity, onTimerRunningChange }: WorkoutPageProps) {
   console.log("WorkoutPage renderizou!");
 
   // Determina se os botões de avançar ou salvar devem estar habilitados
@@ -65,7 +66,10 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
         <div>
           <PhaseHeader phase="during" />
           <div className="space-y-3">
-            <WorkoutTimer onTimeChange={(s) => setDuring((p) => ({ ...p, timeSeconds: s }))} />
+            <WorkoutTimer
+              onTimeChange={(s) => setDuring((p) => ({ ...p, timeSeconds: s }))}
+              onRunningChange={onTimerRunningChange}
+            />
             <MetricInput label="Frequência Cardíaca" unit="bpm" value={during.bpm} onChange={(v) => setDuring((p) => ({ ...p, bpm: v }))} placeholder="158" icon={<Activity size={14} />} min={30} max={250} />
             <MetricInput label="Distância Percorrida" unit="km" value={during.distance} onChange={(v) => setDuring((p) => ({ ...p, distance: v }))} placeholder="20.0" icon={<Bike size={14} />} />
           </div>

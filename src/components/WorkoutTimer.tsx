@@ -4,9 +4,10 @@ import { Play, Pause, RotateCcw } from "lucide-react";
 // Props para o componente WorkoutTimer
 interface WorkoutTimerProps {
   onTimeChange: (seconds: number) => void;
+  onRunningChange: (running: boolean) => void;
 }
 
-export function WorkoutTimer({ onTimeChange }: WorkoutTimerProps) {
+export function WorkoutTimer({ onTimeChange, onRunningChange }: WorkoutTimerProps) {
   // Estado interno do timer
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
@@ -48,6 +49,11 @@ export function WorkoutTimer({ onTimeChange }: WorkoutTimerProps) {
   useEffect(() => {
     onTimeChange(seconds);
   }, [seconds]);
+
+  // Notifica o pai sempre que o estado de running mudar
+  useEffect(() => {
+    onRunningChange(running);
+  }, [running]);
 
   // Formata o tempo em hh:mm:ss
   const fmt = (s: number) => {

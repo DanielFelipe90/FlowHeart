@@ -12,17 +12,13 @@ import { useWorkout } from "../hooks/useWorkout";
 import { RegisterPage } from "../pages/RegisterPage";
 import { LoginPage } from "../pages/LoginPage";
 import { PerfilPage } from "../pages/PerfilPage";
-import { isAuthenticated, apiGetMe, clearToken } from "../utils/api";
+import { isAuthenticated, apiGetMe, clearToken, apiFetch } from "../utils/api";
 import { useInactivity } from "../hooks/useInactivity";
 import { useSessionLifecycle } from "../hooks/useSessionLifecycle";
 
-// Lazy: EstatisticasPage puxa o recharts, a dependência mais pesada do bundle.
-// Só carrega o chunk quando o usuário realmente navega até essa página.
 const EstatisticasPage = lazy(() =>
   import("../pages/EstatisticasPage").then((m) => ({ default: m.EstatisticasPage }))
 );
-
-// ─── Helper de navegação ──────────────────────────────────────────────────────
 
 function navigate(setPage: (p: AppPage) => void, page: AppPage) {
   if (!document.startViewTransition) {
@@ -32,12 +28,9 @@ function navigate(setPage: (p: AppPage) => void, page: AppPage) {
   document.startViewTransition(() => setPage(page));
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
-
 export default function App() {
   const [page, setPage] = useState<AppPage>({ tag: "onboarding" });
   const [userId, setUserId] = useState<string | null>(null);
-
 
   const {
     sessions, userName, pre, setPre, during, setDuring, post, setPost,
@@ -47,11 +40,6 @@ export default function App() {
 
   const isLoggedIn = !!userName;
 
-  /**
-   * Ao iniciar o app verifica se há token válido salvo.
-   * Se sim, busca o usuário na API e vai direto para home.
-   * Se o token estiver expirado (401), redireciona para login.
-   */
   useEffect(() => {
     if (!isAuthenticated()) return;
 
@@ -62,60 +50,72 @@ export default function App() {
         navigate(setPage, { tag: "home" });
       })
       .catch(() => {
-        // Token expirado ou inválido
         clearToken();
         navigate(setPage, { tag: "onboarding" });
       });
   }, []);
 
-  // Função para iniciar um novo treino e navegar para a fase "pre"
+  const handleAuthSuccess = useCallback(async (): Promise<boolean> => {
+    try {
+      const user = await apiGetMe();
+      handleSetUserName(user.name);
+      setUserId(user.id);
+      return true;
+    } catch {
+      clearToken();
+      navigate(setPage, { tag: "onboarding" });
+      return false;
+    }
+  }, [handleSetUserName]);
+
   const handleStartWorkout = () => {
     startNewWorkout();
     navigate(setPage, { tag: "workout", phase: "pre" });
   };
 
-  // Função para salvar a sessão de treino e navegar para a página de histórico
   const handleSaveAndNavigate = async () => {
+    setIsTimerRunning(false);
     await saveSession();
     navigate(setPage, { tag: "history" });
   };
 
-  // Função para lidar com logout, incluindo limpeza de token, histórico do navegador e transição visual para a página de onboarding
+  // Marca offline via backend antes de deslogar — sem depender do Supabase diretamente
   const handleLogout = useCallback(async () => {
+    try {
+      await apiFetch("/auth/offline", { method: "POST" });
+    } catch {
+      // ignora erro — o cron de limpeza vai marcar offline em até 5 min
+    }
     await logout();
     window.history.replaceState(null, "", "/onboarding");
     navigate(setPage, { tag: "onboarding" });
   }, [logout, setPage]);
 
-  // Função para lidar com a exclusão da conta do usuário, incluindo navegação para a página de onboarding após a exclusão
   const handleDeleteAccount = async () => {
     await deleteAccount();
     navigate(setPage, { tag: "onboarding" });
   };
 
-  // Hook customizado para monitorar o ciclo de vida da sessão, incluindo eventos de fechamento da janela
   useSessionLifecycle();
 
-  const isWorkoutActive = page.tag === "workout";
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  // Hook customizado para lidar com inatividade do usuário, mostrando um modal de aviso e permitindo que o usuário continue logado
+  const isWorkoutActive = isTimerRunning || page.tag === "onboarding";
+
   const { showModal, setShowModal, resetInactivity } = useInactivity(
     handleLogout,
     isLoggedIn,
     userId,
     isWorkoutActive
   );
-  // Função para lidar com a ação de "continuar logado" no modal de inatividade, fechando o modal e resetando o temporizador de inatividade
+
   const handleKeepAlive = () => {
     setShowModal(false);
     resetInactivity();
   };
 
   return (
-
     <>
-
-      {/** Renderiza o modal de inatividade apenas se o usuário estiver logado e o modal estiver visível */}
       {isLoggedIn && (
         <InactivityModal isOpen={showModal} onKeepAlive={handleKeepAlive} />
       )}
@@ -143,7 +143,7 @@ export default function App() {
 
           {page.tag === "register" && (
             <RegisterPage
-              setUserName={handleSetUserName}
+              onAuthSuccess={handleAuthSuccess}
               setPage={(p) => navigate(setPage, p)}
               onBack={() => navigate(setPage, { tag: "onboarding" })}
             />
@@ -151,7 +151,7 @@ export default function App() {
 
           {page.tag === "login" && (
             <LoginPage
-              setUserName={handleSetUserName}
+              onAuthSuccess={handleAuthSuccess}
               setPage={(p) => navigate(setPage, p)}
               onBack={() => navigate(setPage, { tag: "onboarding" })}
             />
@@ -175,6 +175,7 @@ export default function App() {
               setPage={(p) => navigate(setPage, p)}
               saveSession={handleSaveAndNavigate}
               resetInactivity={resetInactivity}
+              onTimerRunningChange={setIsTimerRunning}
             />
           )}
 

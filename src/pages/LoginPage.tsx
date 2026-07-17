@@ -5,12 +5,12 @@ import { PasswordInput } from "../components/PasswordInput";
 
 // Props para o componente LoginPage
 interface LoginPageProps {
-  setUserName: (name: string) => void;
+  onAuthSuccess: () => Promise<boolean>;
   setPage: (page: AppPage) => void;
   onBack: () => void;
 }
 
-export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
+export function LoginPage({ onAuthSuccess, setPage, onBack }: LoginPageProps) {
 
   // Estados para armazenar os valores dos campos, mensagens de erro, tentativas de login e bloqueio temporário
   const [name, setName] = useState("");
@@ -43,8 +43,12 @@ export function LoginPage({ setUserName, setPage, onBack }: LoginPageProps) {
       saveToken(token, rememberMe);
       setAttempts(0);
       setBlockedUntil(null);
-      setUserName(name);
-      setPage({ tag: "home" });
+      const success = await onAuthSuccess();
+      if (success) {
+        setPage({ tag: "home" });
+      } else {
+        setErrorMessage("Não foi possível carregar seus dados. Tente novamente.");
+      }
     } catch (err: unknown) {
       // Incrementa o contador de tentativas e verifica se o usuário deve ser bloqueado
       const newAttempts = attempts + 1;

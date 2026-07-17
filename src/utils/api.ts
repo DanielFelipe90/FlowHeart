@@ -1,6 +1,6 @@
 // ─── Configuração base da API ─────────────────────────────────────────────────
 
-const API_URL = "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
 // ─── Gerenciamento do token ───────────────────────────────────────────────────
 
@@ -87,9 +87,8 @@ export async function apiRegister(name: string, password: string): Promise<strin
   });
   // Se a resposta não for OK, tenta extrair a mensagem de erro do corpo da resposta e lança um erro
   if (!res.ok) {
-    // Tenta extrair a mensagem de erro do corpo da resposta
-    const err = await res.json();
-    throw new Error(err.detail ?? "Erro ao registrar");
+    const message = await res.json().then((e) => e.detail).catch(() => "Erro ao registrar");
+    throw new Error(message);
   }
   // Se a resposta for OK, extrai o token do corpo da resposta e retorna
   const data = await res.json();
@@ -106,9 +105,8 @@ export async function apiLogin(name: string, password: string): Promise<string> 
   });
   // Se a resposta não for OK, tenta extrair a mensagem de erro do corpo da resposta e lança um erro
   if (!res.ok) {
-    // Tenta extrair a mensagem de erro do corpo da resposta
-    const err = await res.json();
-    throw new Error(err.detail ?? "Nome ou senha incorretos");
+    const message = await res.json().then((e) => e.detail).catch(() => "Nome ou senha incorretos");
+    throw new Error(message);
   }
   // Se a resposta for OK, extrai o token do corpo da resposta e retorna
   const data = await res.json();
@@ -166,18 +164,7 @@ export async function apiDeleteSession(id: string): Promise<void> {
  * O PDF é gerado no servidor com WeasyPrint — mais seguro que no frontend.
  */
 export async function apiDownloadReport(userName: string): Promise<void> {
-  const token = loadToken();
-
-  const res = await fetch(`${API_URL}/reports/pdf`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (res.status === 401) {
-    clearToken();
-    throw new Error("UNAUTHORIZED");
-  }
+  const res = await apiFetch("/reports/pdf");
 
   if (res.status === 404) {
     throw new Error("Nenhum treino registrado para gerar o relatório.");

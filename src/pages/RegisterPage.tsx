@@ -6,12 +6,12 @@ import { TermsModal } from "../components/TermsModal";
 
 // Props para o componente RegisterPage
 interface RegisterPageProps {
-  setUserName: (name: string) => void;
+  onAuthSuccess: () => Promise<boolean>;
   setPage: (page: AppPage) => void;
   onBack: () => void;
 }
 
-export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps) {
+export function RegisterPage({ onAuthSuccess, setPage, onBack }: RegisterPageProps) {
 
   // Estados para armazenar os valores dos campos e mensagens de erro
   const [name, setName] = useState("");
@@ -30,8 +30,13 @@ export function RegisterPage({ setUserName, setPage, onBack }: RegisterPageProps
     try {
       const token = await apiRegister(name, password);
       saveToken(token, rememberMe);
-      setUserName(name);
-      setPage({ tag: "home" });
+      const success = await onAuthSuccess();
+      if (success) {
+        setPage({ tag: "home" });
+      } else {
+        setShowTerms(false);
+        setErrorMessage("Não foi possível carregar seus dados. Tente novamente.");
+      }
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Erro ao registrar");
       setShowTerms(false);
