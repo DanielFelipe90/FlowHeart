@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Activity, Bike, ChevronRight, CheckCircle2 } from "lucide-react";
 import { MetricInput } from "../components/MetricInput";
 import { BloodPressureInput } from "../components/BloodPressureInput";
@@ -6,7 +7,6 @@ import { IHBToggle } from "../components/IHBToggle";
 import { PhaseHeader } from "../components/PhaseHeader";
 import { StepIndicator } from "../components/StepIndicator";
 import type { AppPage, Phase, PreState, DuringState, PostState } from "../types";
-import { useInactivityHeartbeat } from "../hooks/useInactivityHeartbeat";
 import { useWorkoutNotifications } from "../hooks/useWorkoutNotifications";
 
 // Props para o componente WorkoutPage
@@ -17,24 +17,20 @@ interface WorkoutPageProps {
   post: PostState; setPost: React.Dispatch<React.SetStateAction<PostState>>;
   setPage: (page: AppPage) => void;
   saveSession: () => void;
-  resetInactivity: () => void;
   onTimerRunningChange: (running: boolean) => void;
 }
 
-export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPost, setPage, saveSession, resetInactivity, onTimerRunningChange }: WorkoutPageProps) {
+export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPost, setPage, saveSession, onTimerRunningChange }: WorkoutPageProps) {
   console.log("WorkoutPage renderizou!");
 
   // Determina se os botões de avançar ou salvar devem estar habilitados
   const canAdvancePre = pre.systolic && pre.diastolic && pre.bpm;
   const canAdvanceDuring = during.bpm;
   const canSavePost = post.systolic && post.diastolic && post.bpm;
-
-  // Hooks customizados para lidar com inatividade e notificações durante o treino
-  useInactivityHeartbeat(phase, resetInactivity);
+  const [timerRunning, setTimerRunning] = useState(false);
 
   // Hook customizado para lidar com notificações durante o treino
-  useWorkoutNotifications(phase, during.timeSeconds);
-
+  useWorkoutNotifications(phase, during.timeSeconds, timerRunning);
   return (
     <div>
       <StepIndicator current={phase} />
@@ -68,7 +64,10 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
           <div className="space-y-3">
             <WorkoutTimer
               onTimeChange={(s) => setDuring((p) => ({ ...p, timeSeconds: s }))}
-              onRunningChange={onTimerRunningChange}
+              onRunningChange={(running) => {
+                onTimerRunningChange(running); 
+                setTimerRunning(running);
+              }}
             />
             <MetricInput label="Frequência Cardíaca" unit="bpm" value={during.bpm} onChange={(v) => setDuring((p) => ({ ...p, bpm: v }))} placeholder="158" icon={<Activity size={14} />} min={30} max={250} />
             <MetricInput label="Distância Percorrida" unit="km" value={during.distance} onChange={(v) => setDuring((p) => ({ ...p, distance: v }))} placeholder="20.0" icon={<Bike size={14} />} />

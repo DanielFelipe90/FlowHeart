@@ -21,6 +21,18 @@
   <link rel="icon" type="image/png" href="/icon.png" />
 
   <title>FlowHeart</title>
+
+  <!-- Script para evitar a piscada clara (Theme Flash) no carregamento -->
+  <script>
+    (function () {
+      const theme = localStorage.getItem("flowheart_theme") || "dark";
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    })();
+  </script>
 </head>
 
 <body>

@@ -69,91 +69,98 @@ export function LoginPage({ onAuthSuccess, setPage, onBack }: LoginPageProps) {
 
   return (
     <div className="flex flex-col justify-center min-h-[70vh] pb-14">
-      <div className="mb-8">
-        <h1
-          className="text-foreground"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2.5rem", fontWeight: 800, lineHeight: 1.05 }}
-        >
-          <span className="text-primary">FLOW</span>
-          <span className="text-destructive">HEART</span>
-          <br /><br />
-          ENTRAR NA CONTA...
-        </h1>
-        <p className="text-muted-foreground mt-2 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
-          Insira seus dados para continuar.
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="username" className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
-            Nome
-          </label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            autoComplete="name"
-            placeholder="Digite seu nome"
-            value={name}
-            onChange={(e) => setName(e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, ""))}
-            className="w-full rounded-xl border border-border bg-input-background px-4 py-3 text-foreground outline-none focus:border-primary transition-all"
-            style={{ fontFamily: "'Inter', sans-serif" }}
-          />
+      {loading ? (
+        /* Splash Screen exibido durante o processo de Login */
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground text-sm mt-4 animate-pulse" style={{ fontFamily: "'Inter', sans-serif" }}>
+            Entrando e carregando seus dados...
+          </p>
         </div>
-
-        <div>
-          <PasswordInput
-            id="password"
-            label="Senha"
-            value={password}
-            onChange={setPassword}
-            placeholder="Sua senha"
-          />
-        </div>
-
-        {/* Lembrar de mim */}
-        <button
-          onClick={() => setRememberMe((v) => !v)}
-          className="flex items-center gap-3 w-full"
-        >
-          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${rememberMe ? "border-primary bg-primary" : "border-primary/30 bg-transparent"
-            }`}>
-            {rememberMe && <span className="text-primary-foreground text-xs font-bold">✓</span>}
-          </div>
-          <span className="text-muted-foreground text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
-            Lembrar de mim
-          </span>
-        </button>
-
-        {errorMessage && (
-          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-center justify-between">
-            <p className="text-destructive text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
-              {errorMessage}
+      ) : (
+        /* Formulário de Login Padrão */
+        <>
+          <div className="mb-8">
+            <h1
+              className="text-foreground"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2.5rem", fontWeight: 800, lineHeight: 1.05 }}
+            >
+              <span className="text-primary">FLOW</span>
+              <span className="text-destructive">HEART</span>
+              <br /><br />
+              ENTRAR NA CONTA...
+            </h1>
+            <p className="text-muted-foreground mt-2 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+              Insira seus dados para continuar.
             </p>
-            <button onClick={() => setErrorMessage("")} className="text-destructive hover:opacity-70 transition-opacity ml-3">
-              ✕
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="username" className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Nome
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                autoComplete="name"
+                placeholder="Digite seu nome"
+                value={name}
+                onChange={(e) => setName(e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, ""))}
+                className="w-full rounded-xl border border-border bg-input-background px-4 py-3 text-foreground outline-none focus:border-primary transition-all"
+                style={{ fontFamily: "'Inter', sans-serif" }}
+              />
+            </div>
+            <div>
+              <PasswordInput
+                id="password"
+                label="Senha"
+                value={password}
+                onChange={setPassword}
+                placeholder="Sua senha"
+              />
+            </div>
+            {/* Lembrar de mim */}
+            <button
+              onClick={() => setRememberMe((v) => !v)}
+              className="flex items-center gap-3 w-full"
+            >
+              <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${rememberMe ? "border-primary bg-primary" : "border-primary/30 bg-transparent"
+                }`}>
+                {rememberMe && <span className="text-primary-foreground text-xs font-bold">✓</span>}
+              </div>
+              <span className="text-muted-foreground text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Lembrar de mim
+              </span>
+            </button>
+            {errorMessage && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-center justify-between">
+                <p className="text-destructive text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  {errorMessage}
+                </p>
+                <button onClick={() => setErrorMessage("")} className="text-destructive hover:opacity-70 transition-opacity ml-3">
+                  ✕
+                </button>
+              </div>
+            )}
+            <button
+              disabled={!canLogin || loading || isBlocked}
+              onClick={handleLogin}
+              className="w-full rounded-xl py-4 flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 bg-primary text-primary-foreground"
+            >
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
+                ENTRAR
+              </span>
+            </button>
+            <button
+              onClick={onBack}
+              className="w-full rounded-xl py-4 flex items-center justify-center border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
+            >
+              Voltar
             </button>
           </div>
-        )}
-
-        <button
-          disabled={!canLogin || loading || isBlocked}
-          onClick={handleLogin}
-          className="w-full rounded-xl py-4 flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 bg-primary text-primary-foreground"
-        >
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
-            {loading ? "ENTRANDO..." : "ENTRAR"}
-          </span>
-        </button>
-
-        <button
-          onClick={onBack}
-          className="w-full rounded-xl py-4 flex items-center justify-center border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
-        >
-          Voltar
-        </button>
-      </div>
+        </>
+      )}
     </div>
   );
 }

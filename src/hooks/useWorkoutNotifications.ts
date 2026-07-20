@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export function useWorkoutNotifications(phase: string, timeSeconds: number) {
+export function useWorkoutNotifications(phase: string, timeSeconds: number, isTimerRunning: boolean) {
   // Guardamos o tempo numa ref para não recriar o intervalo desnecessariamente
   const timeRef = useRef(timeSeconds);
 
@@ -9,17 +9,15 @@ export function useWorkoutNotifications(phase: string, timeSeconds: number) {
     timeRef.current = timeSeconds;
   }, [timeSeconds]);
 
-  // Configura o intervalo de notificações apenas quando a fase é "during"
+  // Configura o intervalo de notificações apenas quando a fase é "during" E o cronômetro está rodando
   useEffect(() => {
-    if (phase !== "during") return;
+    if (phase !== "during" || !isTimerRunning) return;
 
     const notificationInterval = setInterval(() => {
       if (Notification.permission === "granted") {
-        // Calcula minutos e segundos
+        // Calcula minutos e segundos com base no valor mais recente do tempo
         const minutes = Math.floor(timeRef.current / 60);
         const seconds = timeRef.current % 60;
-
-        // Formata os segundos para sempre ter 2 dígitos (ex: 05 em vez de 5)
         const formattedSeconds = String(seconds).padStart(2, "0");
 
         // Dispara a notificação com o tempo de treino
@@ -30,10 +28,9 @@ export function useWorkoutNotifications(phase: string, timeSeconds: number) {
           silent: true
         } as NotificationOptions);
       }
-    }, 300000);
-    // 5000 = 5 segundos, 300000 = 5 minutos
+    }, 300000); // 5 minutos (300000ms)
 
-    // Limpa o intervalo quando a fase muda ou o componente é desmontado
+    // Limpa o intervalo se der Pause, mudar de fase ou desmontar
     return () => clearInterval(notificationInterval);
-  }, [phase]);
+  }, [phase, isTimerRunning]); // O efeito reage ao Play/Pause e à Fase
 }

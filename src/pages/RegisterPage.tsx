@@ -149,6 +149,7 @@ export function RegisterPage({ onAuthSuccess, setPage, onBack }: RegisterPagePro
         <TermsModal
           onAccept={handleRegister}
           onClose={() => setShowTerms(false)}
+          loading={loading}
         />
       )}
     </div>

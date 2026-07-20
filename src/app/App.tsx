@@ -8,12 +8,13 @@ import { HomePage } from "../pages/HomePage";
 import { WorkoutPage } from "../pages/WorkoutPage";
 import { HistoryPage } from "../pages/HistoryPage";
 import { DetailPage } from "../pages/DetailPage";
-import { useWorkout } from "../hooks/useWorkout";
 import { RegisterPage } from "../pages/RegisterPage";
 import { LoginPage } from "../pages/LoginPage";
 import { PerfilPage } from "../pages/PerfilPage";
 import { isAuthenticated, apiGetMe, clearToken, apiFetch } from "../utils/api";
+import { useWorkout } from "../hooks/useWorkout";
 import { useInactivity } from "../hooks/useInactivity";
+import { useUserPresence } from "../hooks/useUserPresence";
 import { useSessionLifecycle } from "../hooks/useSessionLifecycle";
 
 const EstatisticasPage = lazy(() =>
@@ -31,29 +32,43 @@ function navigate(setPage: (p: AppPage) => void, page: AppPage) {
 export default function App() {
   const [page, setPage] = useState<AppPage>({ tag: "onboarding" });
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+
+  // Verifica login diretamente pela API antes de chamar os hooks
+  const isLoggedIn = isAuthenticated();
+
+  // Hook central — Passamos a trava de autenticação como argumento
+  const { userName, ...workout } = useWorkout(!isAuthChecking && isLoggedIn);
 
   const {
-    sessions, userName, pre, setPre, during, setDuring, post, setPost,
+    sessions, pre, setPre, during, setDuring, post, setPost,
     handleSetUserName, startNewWorkout, saveSession, deleteSession, logout,
-    deleteAccount
-  } = useWorkout();
-
-  const isLoggedIn = !!userName;
+    deleteAccount, fetchSessions
+  } = workout;
 
   useEffect(() => {
-    if (!isAuthenticated()) return;
+    if (!isLoggedIn) {
+      setIsAuthChecking(false);
+      return;
+    }
 
     apiGetMe()
       .then(async (user) => {
         handleSetUserName(user.name);
         setUserId(user.id);
-        navigate(setPage, { tag: "home" });
+        await fetchSessions();
+
+        if (page.tag === "onboarding") {
+          navigate(setPage, { tag: "home" });
+        }
       })
       .catch(() => {
         clearToken();
-        navigate(setPage, { tag: "onboarding" });
-      });
-  }, []);
+        // Opcional: navigate(setPage, { tag: "onboarding" });
+      })
+      .finally(() => setIsAuthChecking(false));
+  }, [fetchSessions, isLoggedIn, page.tag]);
 
   const handleAuthSuccess = useCallback(async (): Promise<boolean> => {
     try {
@@ -96,10 +111,6 @@ export default function App() {
     navigate(setPage, { tag: "onboarding" });
   };
 
-  useSessionLifecycle();
-
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-
   const isWorkoutActive = isTimerRunning || page.tag === "onboarding";
 
   const { showModal, setShowModal, resetInactivity } = useInactivity(
@@ -113,6 +124,10 @@ export default function App() {
     setShowModal(false);
     resetInactivity();
   };
+
+  useSessionLifecycle();
+
+  useUserPresence(isLoggedIn && !isAuthChecking && !showModal);
 
   return (
     <>
@@ -136,78 +151,90 @@ export default function App() {
           )}
 
         <main className="max-w-lg mx-auto px-4 py-6">
+          {isAuthChecking ? (
+            /* Splash screen adaptável ao modo Claro / Escuro */
+            <div className="flex flex-col items-center justify-center py-32 bg-background">
+              {/* O círculo giratório usa o azul/verde primário do tema correspondente */}
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              {/* O texto se adapta à cor secundária do tema */}
+              <p className="text-muted-foreground text-sm mt-4 animate-pulse" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Carregando o FlowHeart...
+              </p>
+            </div>
+          ) : (
+            /* Renderiza as páginas normalmente após concluir a verificação de login */
+            <>
+              {page.tag === "onboarding" && (
+                <OnboardingPage setPage={(p) => navigate(setPage, p)} />
+              )}
 
-          {page.tag === "onboarding" && (
-            <OnboardingPage setPage={(p) => navigate(setPage, p)} />
+              {page.tag === "register" && (
+                <RegisterPage
+                  onAuthSuccess={handleAuthSuccess}
+                  setPage={(p) => navigate(setPage, p)}
+                  onBack={() => navigate(setPage, { tag: "onboarding" })}
+                />
+              )}
+
+              {page.tag === "login" && (
+                <LoginPage
+                  onAuthSuccess={handleAuthSuccess}
+                  setPage={(p) => navigate(setPage, p)}
+                  onBack={() => navigate(setPage, { tag: "onboarding" })}
+                />
+              )}
+
+              {page.tag === "home" && (
+                <HomePage
+                  userName={userName}
+                  sessions={sessions}
+                  setPage={(p) => navigate(setPage, p)}
+                  startNewWorkout={handleStartWorkout}
+                />
+              )}
+
+              {page.tag === "workout" && (
+                <WorkoutPage
+                  phase={page.phase}
+                  pre={pre} setPre={setPre}
+                  during={during} setDuring={setDuring}
+                  post={post} setPost={setPost}
+                  setPage={(p) => navigate(setPage, p)}
+                  saveSession={handleSaveAndNavigate}
+                  onTimerRunningChange={setIsTimerRunning}
+                />
+              )}
+
+              {page.tag === "history" && (
+                <HistoryPage
+                  sessions={sessions}
+                  setPage={(p) => navigate(setPage, p)}
+                  onBack={() => navigate(setPage, { tag: "home" })}
+                  onDelete={deleteSession}
+                />
+              )}
+
+              {page.tag === "detail" && (
+                <DetailPage
+                  session={page.session}
+                  onBack={() => navigate(setPage, { tag: "history" })}
+                />
+              )}
+
+              {page.tag === "estatisticas" && (
+                <Suspense fallback={<div className="text-center py-10 text-muted-foreground">Carregando estatísticas…</div>}>
+                  <EstatisticasPage sessions={sessions} userName={userName} />
+                </Suspense>
+              )}
+
+              {page.tag === "perfil" && (
+                <PerfilPage
+                  userName={userName}
+                  onDeleteAccount={handleDeleteAccount}
+                />
+              )}
+            </>
           )}
-
-          {page.tag === "register" && (
-            <RegisterPage
-              onAuthSuccess={handleAuthSuccess}
-              setPage={(p) => navigate(setPage, p)}
-              onBack={() => navigate(setPage, { tag: "onboarding" })}
-            />
-          )}
-
-          {page.tag === "login" && (
-            <LoginPage
-              onAuthSuccess={handleAuthSuccess}
-              setPage={(p) => navigate(setPage, p)}
-              onBack={() => navigate(setPage, { tag: "onboarding" })}
-            />
-          )}
-
-          {page.tag === "home" && (
-            <HomePage
-              userName={userName}
-              sessions={sessions}
-              setPage={(p) => navigate(setPage, p)}
-              startNewWorkout={handleStartWorkout}
-            />
-          )}
-
-          {page.tag === "workout" && (
-            <WorkoutPage
-              phase={page.phase}
-              pre={pre} setPre={setPre}
-              during={during} setDuring={setDuring}
-              post={post} setPost={setPost}
-              setPage={(p) => navigate(setPage, p)}
-              saveSession={handleSaveAndNavigate}
-              resetInactivity={resetInactivity}
-              onTimerRunningChange={setIsTimerRunning}
-            />
-          )}
-
-          {page.tag === "history" && (
-            <HistoryPage
-              sessions={sessions}
-              setPage={(p) => navigate(setPage, p)}
-              onBack={() => navigate(setPage, { tag: "home" })}
-              onDelete={deleteSession}
-            />
-          )}
-
-          {page.tag === "detail" && (
-            <DetailPage
-              session={page.session}
-              onBack={() => navigate(setPage, { tag: "history" })}
-            />
-          )}
-
-          {page.tag === "estatisticas" && (
-            <Suspense fallback={<div className="text-center py-10 text-muted-foreground">Carregando estatísticas…</div>}>
-              <EstatisticasPage sessions={sessions} userName={userName} />
-            </Suspense>
-          )}
-
-          {page.tag === "perfil" && (
-            <PerfilPage
-              userName={userName}
-              onDeleteAccount={handleDeleteAccount}
-            />
-          )}
-
         </main>
 
         {(page.tag === "onboarding" ||

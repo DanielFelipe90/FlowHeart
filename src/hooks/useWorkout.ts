@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { saveUserName, loadUserName, clearUserName } from "../utils/storage";
 import { apiGetSessions, apiCreateSession, apiDeleteSession, apiDeleteAccount, clearToken } from "../utils/api";
 import type { WorkoutSession, PreState, DuringState, PostState } from "../types";
@@ -14,10 +14,11 @@ import { apiLogout } from "../utils/api";
  *
  * A navegação entre páginas é responsabilidade do App.tsx.
  */
-export function useWorkout() {
+export function useWorkout(enabled: boolean) {
 
+  
   // ── Estado ────────────────────────────────────────────────────────────────
-
+  
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [userName, setUserName] = useState<string>(() => loadUserName());
   const [loadingSession, setLoadingSession] = useState(false);
@@ -37,6 +38,10 @@ export function useWorkout() {
     }
   }, []);
 
+  useEffect(() => {
+     if (!enabled) return;
+     fetchSessions();
+  }, [enabled, fetchSessions]);
   // ── Estado temporário do treino em andamento ───────────────────────────────
 
   const [pre, setPre] = useState<PreState>({
@@ -60,7 +65,6 @@ export function useWorkout() {
   async function handleSetUserName(name: string) {
     setUserName(name);
     saveUserName(name);
-    await fetchSessions();
   }
 
   /**

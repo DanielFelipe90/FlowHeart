@@ -21,10 +21,22 @@
   <link rel="icon" type="image/png" href="/icon.png" />
 
   <title>FlowHeart</title>
-  <script type="module" crossorigin src="/assets/index-DQbrRzrQ.js"></script>
+
+  <!-- Script para evitar a piscada clara (Theme Flash) no carregamento -->
+  <script>
+    (function () {
+      const theme = localStorage.getItem("flowheart_theme") || "dark";
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    })();
+  </script>
+  <script type="module" crossorigin src="/assets/index-DHej6t8E.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/radix-DNh6H0mn.js">
   <link rel="modulepreload" crossorigin href="/assets/charts-gWHS4kFv.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-DmN4lmHR.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-hRUWJZMM.css">
 <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 <body>
