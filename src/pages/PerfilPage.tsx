@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { DeleteAccount } from "../components/DeleteAccount";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useTheme } from "../hooks/useTheme";
@@ -18,6 +18,11 @@ const AVATAR_COLORS = [
 export function PerfilPage({ userName, onDeleteAccount }: PerfilPageProps) {
   const { theme, toggleTheme } = useTheme();
 
+  // Estado inicial lido direto da API do navegador (sem pedir nada ainda).
+  const [notificationPermission, setNotificationPermission] = useState<
+    NotificationPermission | "unsupported"
+  >(() => (("Notification" in window) ? Notification.permission : "unsupported"));
+
   // Calcula a cor do avatar com base na primeira letra do nome do usuário
   const avatarColor = useMemo(() => {
     const index = userName.charCodeAt(0) % AVATAR_COLORS.length;
@@ -33,12 +38,36 @@ export function PerfilPage({ userName, onDeleteAccount }: PerfilPageProps) {
       alert("Este navegador não suporta notificações.");
       return;
     }
-    // Solicita permissão de notificações ao usuário
+
+    // Se já foi negada antes, o navegador NÃO mostra o diálogo de novo —
+    // requestPermission() só devolve "denied" na hora, sem UI nenhuma.
+    // Avisamos o usuário de que precisa liberar manualmente nas
+    // configurações do site, senão o clique parece não fazer nada.
+    if (Notification.permission === "denied") {
+      alert(
+        "As notificações estão bloqueadas para este site. Para ativar, abra as configurações do navegador (ícone de cadeado/informações ao lado da URL) e permita notificações para este endereço."
+      );
+      return;
+    }
+
     const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+
     if (permission === "granted") {
       alert("Notificações ativadas com sucesso!");
+    } else if (permission === "denied") {
+      alert("Permissão negada. Você pode ativar depois nas configurações do navegador.");
     }
+    // "default" (usuário fechou o diálogo sem escolher) — sem alerta,
+    // já que o próximo clique mostra o diálogo de novo normalmente.
   };
+
+  const notificationButtonLabel =
+    notificationPermission === "granted"
+      ? "Notificações Ativadas"
+      : notificationPermission === "denied"
+      ? "Notificações Bloqueadas"
+      : "Ativar Notificações";
 
   return (
     <div className="space-y-6 flex flex-col min-h-[70vh]">
@@ -82,9 +111,10 @@ export function PerfilPage({ userName, onDeleteAccount }: PerfilPageProps) {
 
         <button
           onClick={requestNotificationPermission}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg"
+          disabled={notificationPermission === "granted"}
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg disabled:opacity-60 disabled:cursor-default"
         >
-          Ativar Notificações
+          {notificationButtonLabel}
         </button>
       </div>
 

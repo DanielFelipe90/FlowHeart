@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, Suspense, lazy } from "react";
-import type { AppPage } from "../types";
+import { useState, useEffect, useCallback, useRef, Suspense, lazy } from "react";
+import type { AppPage, WorkoutSession } from "../types";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { InactivityModal } from "../components/InactivityModal";
@@ -11,7 +11,8 @@ import { DetailPage } from "../pages/DetailPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { LoginPage } from "../pages/LoginPage";
 import { PerfilPage } from "../pages/PerfilPage";
-import { isAuthenticated, apiGetMe, clearToken, apiFetch } from "../utils/api";
+import { apiGetMe, clearToken, initAuthToken } from "../utils/api";
+import { pageToPath, parsePath, PUBLIC_TAGS } from "../utils/routes";
 import { useWorkout } from "../hooks/useWorkout";
 import { useInactivity } from "../hooks/useInactivity";
 import { useUserPresence } from "../hooks/useUserPresence";
@@ -22,6 +23,11 @@ const EstatisticasPage = lazy(() =>
 );
 
 function navigate(setPage: (p: AppPage) => void, page: AppPage) {
+  const path = pageToPath(page);
+  if (window.location.pathname !== path) {
+    window.history.pushState(null, "", path);
+  }
+
   if (!document.startViewTransition) {
     setPage(page);
     return;
@@ -30,13 +36,18 @@ function navigate(setPage: (p: AppPage) => void, page: AppPage) {
 }
 
 export default function App() {
+  // Inicializa o token caso venha na URL (ex: SSO do App Kotlin)
+  initAuthToken();
+
   const [page, setPage] = useState<AppPage>({ tag: "onboarding" });
   const [userId, setUserId] = useState<string | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  // Verifica login diretamente pela API antes de chamar os hooks
-  const isLoggedIn = isAuthenticated();
+  // isLoggedIn agora é ESTADO, não mais derivado direto de isAuthenticated().
+  // O token em memória se perde no refresh (F5) — quem prova a sessão
+  // de verdade é o cookie HttpOnly, validado via apiGetMe() abaixo.
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Hook central — Passamos a trava de autenticação como argumento
   const { userName, ...workout } = useWorkout(!isAuthChecking && isLoggedIn);
@@ -47,37 +58,87 @@ export default function App() {
     deleteAccount, fetchSessions
   } = workout;
 
+  // Roda uma única vez, na montagem: sempre tenta validar a sessão contra o
+  // backend (cookie HttpOnly), independente do token em memória já existir
+  // ou não. Isso garante o spinner + a checagem real após um F5.
+  //
+  // A página exibida é resolvida a partir da URL atual (para manter o
+  // usuário na mesma tela após um refresh), com fallback para "home"
+  // (logado) ou "onboarding" (deslogado) quando a URL não corresponde a
+  // nenhuma página válida.
   useEffect(() => {
-    if (!isLoggedIn) {
-      setIsAuthChecking(false);
-      return;
-    }
-
     apiGetMe()
       .then(async (user) => {
         handleSetUserName(user.name);
         setUserId(user.id);
-        await fetchSessions();
+        setIsLoggedIn(true);
+        const fetchedSessions = await fetchSessions();
 
-        if (page.tag === "onboarding") {
-          navigate(setPage, { tag: "home" });
-        }
+        const requested = parsePath(window.location.pathname, fetchedSessions);
+        const target: AppPage =
+          requested && !PUBLIC_TAGS.has(requested.tag) ? requested : { tag: "home" };
+
+        setPage(target);
+        window.history.replaceState(null, "", pageToPath(target));
       })
       .catch(() => {
         clearToken();
-        // Opcional: navigate(setPage, { tag: "onboarding" });
+        setIsLoggedIn(false);
+
+        const requested = parsePath(window.location.pathname, []);
+        const target: AppPage =
+          requested && PUBLIC_TAGS.has(requested.tag) ? requested : { tag: "onboarding" };
+
+        setPage(target);
+        window.history.replaceState(null, "", pageToPath(target));
       })
       .finally(() => setIsAuthChecking(false));
-  }, [fetchSessions, isLoggedIn, page.tag]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Mantém uma ref com a lista de sessões mais recente, para o listener de
+  // popstate abaixo (evita closure desatualizada sem precisar recriar o
+  // listener a cada mudança de `sessions`).
+  const sessionsRef = useRef<WorkoutSession[]>([]);
+  useEffect(() => {
+    sessionsRef.current = sessions;
+  }, [sessions]);
+
+  // Sincroniza a página com os botões voltar/avançar do navegador.
+  useEffect(() => {
+    const handlePopState = () => {
+      if (isAuthChecking) return;
+
+      const requested = parsePath(window.location.pathname, sessionsRef.current);
+
+      if (!isLoggedIn) {
+        setPage(
+          requested && PUBLIC_TAGS.has(requested.tag)
+            ? requested
+            : { tag: "onboarding" }
+        );
+        return;
+      }
+
+      setPage(
+        requested && !PUBLIC_TAGS.has(requested.tag) ? requested : { tag: "home" }
+      );
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isLoggedIn, isAuthChecking]);
 
   const handleAuthSuccess = useCallback(async (): Promise<boolean> => {
     try {
       const user = await apiGetMe();
       handleSetUserName(user.name);
       setUserId(user.id);
+      setIsLoggedIn(true);
       return true;
     } catch {
       clearToken();
+      setIsLoggedIn(false);
       navigate(setPage, { tag: "onboarding" });
       return false;
     }
@@ -94,14 +155,11 @@ export default function App() {
     navigate(setPage, { tag: "history" });
   };
 
-  // Marca offline via backend antes de deslogar — sem depender do Supabase diretamente
+  // Logout explícito (menu gaveta): logout() do hook já chama apiLogout(),
+  // que invalida a sessão de verdade no servidor (deleta o cookie HttpOnly).
   const handleLogout = useCallback(async () => {
-    try {
-      await apiFetch("/auth/offline", { method: "POST" });
-    } catch {
-      // ignora erro — o cron de limpeza vai marcar offline em até 5 min
-    }
     await logout();
+    setIsLoggedIn(false);
     window.history.replaceState(null, "", "/onboarding");
     navigate(setPage, { tag: "onboarding" });
   }, [logout, setPage]);
@@ -196,6 +254,7 @@ export default function App() {
               {page.tag === "workout" && (
                 <WorkoutPage
                   phase={page.phase}
+                  userId={userId}
                   pre={pre} setPre={setPre}
                   during={during} setDuring={setDuring}
                   post={post} setPost={setPost}

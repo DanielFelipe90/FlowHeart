@@ -33,8 +33,10 @@ export function useWorkout(enabled: boolean) {
     try {
       const data = await apiGetSessions();
       setSessions(data as WorkoutSession[]);
+      return data as WorkoutSession[];
     } catch (err) {
       console.error("Erro ao buscar sessões:", err);
+      return [];
     }
   }, []);
 

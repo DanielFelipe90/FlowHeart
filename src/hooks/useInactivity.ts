@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 
 const INACTIVITY_TIMEOUT = 25 * 60 * 1000; // 25 min até mostrar o modal
-const MODAL_TIMEOUT = 5 * 60 * 1000;        // 5 min de modal até logout automático
+const MODAL_TIMEOUT = 2 * 60 * 1000;        // 2 min de modal até logout automático
 
 export function useInactivity(
   onInactive: () => void,
   enabled: boolean,
-  userId: string | null,
+  _userId: string | null,
   isWorkoutActive: boolean = false
 ) {
   const [showModal, setShowModal] = useState(false);
@@ -24,6 +24,11 @@ export function useInactivity(
   useEffect(() => {
     isWorkoutActiveRef.current = isWorkoutActive;
   }, [isWorkoutActive]);
+
+  const showModalRef = useRef(showModal);
+  useEffect(() => {
+    showModalRef.current = showModal;
+  }, [showModal]);
 
   const startTimer = useCallback(() => {
     timerRef.current = setTimeout(() => {
@@ -48,7 +53,7 @@ export function useInactivity(
     if (!enabled) return;
 
     const resetTimer = () => {
-      if (showModal) return;
+      if (showModalRef.current) return;
       resetInactivity();
     };
 
@@ -62,7 +67,8 @@ export function useInactivity(
       if (timerRef.current) clearTimeout(timerRef.current);
       if (modalTimerRef.current) clearTimeout(modalTimerRef.current);
     };
-  }, [enabled, showModal, resetInactivity, startTimer]);
+    
+  }, [enabled, resetInactivity, startTimer]);
 
   return { showModal, setShowModal, resetInactivity };
 }

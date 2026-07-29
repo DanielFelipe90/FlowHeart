@@ -3,9 +3,9 @@ import { API_URL } from '../utils/api';
 
 export type BpmConnectionStatus =
   | 'disconnected'    // WebSocket com backend não conectado
-  | 'waiting'         // WebSocket conectado, aguardando Flutter
-  | 'flutter_connected' // Flutter online, BPM chegando
-  | 'flutter_disconnected'; // Flutter desconectou durante treino
+  | 'waiting'         // WebSocket conectado, aguardando mobile
+  | 'mobile_connected' // mobile online, BPM chegando
+  | 'mobile_disconnected'; // mobile desconectou durante treino
 
 interface UseBpmOptions {
   userId: string | null;
@@ -47,13 +47,13 @@ export function useBpm({ userId, enabled, onBpmReceived }: UseBpmOptions) {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
-      // Mensagem de status do Flutter
-      if (data.status === 'flutter_connected') {
-        setStatus('flutter_connected');
+      // Mensagem de status do mobile
+      if (data.status === 'mobile_connected') {
+        setStatus('mobile_connected');
         return;
       }
-      if (data.status === 'flutter_disconnected') {
-        setStatus('flutter_disconnected');
+      if (data.status === 'mobile_disconnected') {
+        setStatus('mobile_disconnected');
         setCurrentBpm(null);
         return;
       }
@@ -97,6 +97,6 @@ export function useBpm({ userId, enabled, onBpmReceived }: UseBpmOptions) {
     currentBpm,       // último BPM recebido
     getAverageBpm,    // chama ao finalizar treino
     resetReadings,    // chama ao iniciar treino
-    isMobileOnline: status === 'flutter_connected',
+    isMobileOnline: status === 'mobile_connected',
   };
 }

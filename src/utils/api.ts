@@ -1,66 +1,81 @@
 // ─── Configuração base da API ─────────────────────────────────────────────────
 
-export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+export const API_URL =
+  import.meta.env.VITE_API_URL ??
+  (typeof window !== "undefined" && window.location.hostname === "10.0.2.2"
+    ? "http://10.0.2.2:8000"
+    : "http://localhost:8000");
 
-// ─── Gerenciamento do token ───────────────────────────────────────────────────
+// ─── Gerenciamento do token estritamente em memória (Segurança contra XSS) ───
 
-/**
- * Salva o token JWT.
- * rememberMe=true → localStorage (persiste entre sessões)
- * rememberMe=false → sessionStorage (some ao fechar o browser)
- */
-export function saveToken(token: string, rememberMe: boolean): void {
-  if (rememberMe) {
-    localStorage.setItem("flowheart_token", token);
-    sessionStorage.removeItem("flowheart_token");
-  } else {
-    sessionStorage.setItem("flowheart_token", token);
-    localStorage.removeItem("flowheart_token");
-  }
-}
+let inMemoryToken: string | null = null;
 
-/**
- * Carrega o token — verifica localStorage primeiro, depois sessionStorage.
- */
-export function loadToken(): string | null {
-  return (
-    localStorage.getItem("flowheart_token") ??
-    sessionStorage.getItem("flowheart_token") ??
-    null
-  );
-}
-
-/**
- * Remove o token de ambos os storages — usado no logout.
- */
-export function clearToken(): void {
+export function saveToken(token: string, _rememberMe?: boolean): void {
+  inMemoryToken = token;
+  // Garante a remoção do localStorage/sessionStorage para proteção contra XSS
   localStorage.removeItem("flowheart_token");
   sessionStorage.removeItem("flowheart_token");
 }
 
-/**
- * Verifica se há token salvo.
- */
+export function loadToken(): string | null {
+  return inMemoryToken;
+}
+
+export function clearToken(): void {
+  inMemoryToken = null;
+  localStorage.removeItem("flowheart_token");
+  sessionStorage.removeItem("flowheart_token");
+}
+
 export function isAuthenticated(): boolean {
-  return !!loadToken();
+  return !!inMemoryToken;
+}
+
+/**
+ * Inicializa o token na memória a partir da URL (#token=... ou ?token=...)
+ * Utilizado para o Single Sign-On (SSO) seguro vindo do App Kotlin (WebView).
+ */
+export function initAuthToken(): string | null {
+  if (inMemoryToken) return inMemoryToken;
+
+  try {
+    const hash = window.location.hash.substring(1);
+    const hashParams = new URLSearchParams(hash);
+    const queryParams = new URLSearchParams(window.location.search);
+
+    const tokenFromUrl = hashParams.get("token") || queryParams.get("token");
+
+    if (tokenFromUrl) {
+      // Guarda ESTRITAMENTE na memória JS
+      saveToken(tokenFromUrl);
+
+      // Limpa imediatamente o token da URL para não ficar exposto no navegador/histórico
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState(null, "", cleanUrl);
+      return tokenFromUrl;
+    }
+  } catch (err) {
+    console.error("Erro ao inicializar token da URL:", err);
+  }
+
+  return inMemoryToken;
 }
 
 // ─── Fetch autenticado ────────────────────────────────────────────────────────
 
 /**
- * Wrapper do fetch que adiciona o token JWT automaticamente.
- * Lança erro "UNAUTHORIZED" se o token expirar — App redireciona para login.
+ * Wrapper do fetch que adiciona a opção credentials: "include" para enviar cookies HttpOnly
+ * e inclui o header Authorization se o token estiver presente na memória.
  */
 export async function apiFetch(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  // Carrega o token salvo (se houver) e adiciona no header Authorization
   const token = loadToken();
 
-  // Faz a requisição para a API com o endpoint e opções fornecidas
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
+    credentials: "include", // Permite envio/recebimento de cookies HttpOnly entre domínios
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -68,7 +83,7 @@ export async function apiFetch(
     },
   });
 
-  // Se a resposta for 401 (não autorizado), limpa o token e lança erro para redirecionar para login
+  // Se a resposta for 401 (não autorizado), limpa o token da memória
   if (response.status === 401) {
     clearToken();
     throw new Error("UNAUTHORIZED");
@@ -185,16 +200,21 @@ export async function apiDownloadReport(userName: string): Promise<void> {
 // ────────────────────────────────────────────────────────────────────────────
 // Função para notificar o backend sobre o logout do usuário
 export async function apiLogout(): Promise<void> {
-  // Carrega o token salvo (se houver) e envia para o backend para invalidar a sessão
+  // Não travamos mais na ausência de token em memória: o app depende do
+  // cookie HttpOnly (que não é lido pelo JS), então inMemoryToken costuma
+  // ser null mesmo com sessão válida. O backend já aceita o cookie como
+  // fallback para autenticar e apagar a sessão em /auth/logout.
   const token = loadToken();
-  
-  if (!token) return;
 
   try {
-    await apiFetch("/auth/logout", { 
+    await apiFetch("/auth/logout", {
       method: "POST",
-      // Garante que o corpo tenha a chave "token" exigida pelo schema
-      body: JSON.stringify({ token: token }) 
+      // Só inclui body quando há token em memória. Sem token, não manda
+      // corpo nenhum — assim o parâmetro `data: LogoutRequest = None` do
+      // FastAPI cai no default None, em vez de tentar validar um objeto
+      // vazio "{}" contra o schema (o que poderia falhar com 422 se
+      // "token" for um campo obrigatório, impedindo o delete_cookie).
+      ...(token ? { body: JSON.stringify({ token }) } : {}),
     });
   } catch (error) {
     console.error("Erro ao notificar logout:", error);

@@ -29,3 +29,26 @@ Baixe o GTK para Windows:
 5. Aceite os termos
 6. Durante a instalação, marque a opção "Add GTK to PATH" (ou similar)
 7. Complete a instalação
+
+
+
+Nota importante pra depois
+
+Isso é um problema estrutural que vai voltar a te morder: .env.production deveria conter o valor de 
+produção de verdade (algo como https://api.flowheart.com), não um valor de teste local. Quando você 
+for realmente publicar o app, alguém vai precisar lembrar de trocar esse valor de novo — e nesse meio 
+tempo, qualquer teste local com npm run build vai continuar quebrando por engano.
+
+Sugestão mais robusta: para testes locais no emulador, use npm run dev (modo desenvolvimento, que 
+lê .env.development/.env) ao invés de npm run build + preview, deixando o .env.production intocado, 
+reservado só pra quando for de fato pra produção.
+Pode fazer direto no PowerShell, sem abrir editor:
+powershell
+(Get-Content .env.production) -replace 'VITE_API_URL=http://localhost:8000', 
+'VITE_API_URL=http://10.0.2.2:8000' | Set-Content .env.production
+Depois confirme:
+powershell
+Get-Content .env.production
+
+(Get-Content .env.production) -replace 'VITE_API_URL=http://10.0.2.2:8000', 
+'VITE_API_URL=http://localhost:8000' | Set-Content .env.production

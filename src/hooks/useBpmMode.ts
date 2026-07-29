@@ -7,18 +7,26 @@ interface UseBpmModeOptions {
 }
 
 export function useBpmMode({ isMobileOnline }: UseBpmModeOptions) {
-  // Começa sem modo selecionado — usuário escolhe ao entrar na fase during
   const [mode, setMode] = useState<BpmMode | null>(null);
 
-  // Se o Flutter conectar depois que o usuário escolheu "manual",
-  // NÃO troca automaticamente — só disponibiliza o botão de sensor.
-  // Se o Flutter desconectar enquanto está no modo "sensor",
+  // Auto-seleciona na montagem/detecção inicial do sensor
+  useEffect(() => {
+    if (mode === null) {
+      if (isMobileOnline) {
+        setMode('sensor');
+      } else {
+        setMode('manual');
+      }
+    }
+  }, [isMobileOnline, mode]);
+
+  // Se o mobile desconectar enquanto está no modo "sensor",
   // volta pro modo manual automaticamente.
   useEffect(() => {
     if (!isMobileOnline && mode === 'sensor') {
       setMode('manual');
     }
-  }, [isMobileOnline]);
+  }, [isMobileOnline, mode]);
 
   const selectSensor = () => setMode('sensor');
   const selectManual = () => setMode('manual');
@@ -27,7 +35,6 @@ export function useBpmMode({ isMobileOnline }: UseBpmModeOptions) {
     mode,
     selectSensor,
     selectManual,
-    // True quando o usuário ainda não escolheu o modo
     isSelecting: mode === null,
   };
 }
