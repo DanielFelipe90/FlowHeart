@@ -45,7 +45,7 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/localhost:8000\/.*/i,
+            urlPattern: /^https:\/\/flowheart-api-541797931108\.southamerica-east1\.run\.app\/.*/i,
             handler: "NetworkFirst",
             options: {
               cacheName: "api-cache",

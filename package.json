@@ -6,7 +6,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite --host",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "publish": "pnpm build && firebase deploy --only hosting"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "1.2.3",

@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "flowheart-frontend"
+  },
+  "targets": {
+    "flowheart-frontend": {
+      "hosting": {
+        "frontend": [
+          "flowheart-dfs-devops"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
