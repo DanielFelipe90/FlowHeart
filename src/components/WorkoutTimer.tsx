@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, RotateCcw } from "lucide-react";
+import { showNotification } from "../utils/notify";
 
 // Props para o componente WorkoutTimer
 interface WorkoutTimerProps {
@@ -11,37 +12,77 @@ export function WorkoutTimer({ onTimeChange, onRunningChange }: WorkoutTimerProp
   // Estado interno do timer
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
+
+  // Em vez de contar "ticks" do setInterval (que atrasa/pausa em segundo plano),
+  // guardamos o timestamp real de início e o total já acumulado antes desse início.
+  // O tempo exibido é sempre RECALCULADO a partir do relógio real (Date.now()),
+  // então não importa se o intervalo atrasou 15s: no próximo disparo o valor
+  // "pula" para o correto, sem acúmulo de erro.
+  const startTimeRef = useRef<number | null>(null); // timestamp (ms) de quando o run atual começou
+  const baseSecondsRef = useRef(0); // segundos acumulados de runs anteriores (antes de pausar)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Recalcula os segundos com base no relógio real e atualiza o estado
+  const syncFromClock = () => {
+    if (startTimeRef.current == null) return;
+    const elapsedMs = Date.now() - startTimeRef.current;
+    const total = baseSecondsRef.current + Math.floor(elapsedMs / 1000);
+    setSeconds(total);
+  };
 
   // Lógica de disparo da notificação ao clicar em Play
   const handlePlay = () => {
     if (!running) {
-      if (Notification.permission === "granted") {
-        new Notification("FlowHeart: Treino Iniciado", {
-          body: "Seu treino começou. Estamos monitorando seu tempo!",
-          tag: "workout-status",
-          icon: "/favicon.ico"
-        } as NotificationOptions);
-      }
+      showNotification("FlowHeart: Treino Iniciado", {
+        body: "Seu treino começou. Estamos monitorando seu tempo!",
+        tag: "workout-status",
+        icon: "/favicon.ico",
+        vibrate: [200, 100, 200],
+      });
     }
     setRunning((r) => !r);
   };
 
   // Lógica do timer
   useEffect(() => {
-    // Inicia ou para o timer com base no estado "running"
     if (running) {
-      // Inicia o intervalo para incrementar os segundos a cada segundo
-      intervalRef.current = setInterval(() => {
-        setSeconds((s) => s + 1);
-      }, 1000);
+      // Marca o instante real de início deste "run"
+      startTimeRef.current = Date.now();
+
+      // O intervalo serve só como "gatilho" para re-renderizar; o valor mostrado
+      // vem sempre do cálculo por timestamp (syncFromClock), então atrasos do
+      // navegador/SO em segundo plano não geram deriva (drift) acumulada.
+      intervalRef.current = setInterval(syncFromClock, 250);
     } else {
-      // Para o intervalo quando o timer não está rodando
+      // Ao pausar, consolida o tempo decorrido no acumulador base
+      if (startTimeRef.current != null) {
+        const elapsedMs = Date.now() - startTimeRef.current;
+        baseSecondsRef.current += Math.floor(elapsedMs / 1000);
+        startTimeRef.current = null;
+      }
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
-    // Limpa o intervalo quando o componente é desmontado
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [running]);
+
+  // Quando o app volta a ficar visível (usuário reabre, tela liga, troca de app),
+  // força uma sincronização imediata em vez de esperar o próximo tick do intervalo.
+  // É esse listener que resolve o "atraso de até 15s" com o celular no bolso/tela apagada.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && running) {
+        syncFromClock();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
+    window.addEventListener("pageshow", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
+      window.removeEventListener("pageshow", handleVisibility);
     };
   }, [running]);
 
@@ -68,6 +109,8 @@ export function WorkoutTimer({ onTimeChange, onRunningChange }: WorkoutTimerProp
   // Reseta o timer e para a contagem
   const reset = () => {
     setRunning(false);
+    startTimeRef.current = null;
+    baseSecondsRef.current = 0;
     setSeconds(0);
   };
 

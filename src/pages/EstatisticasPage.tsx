@@ -8,12 +8,25 @@ import { apiDownloadReport } from "../utils/api";
 interface EstatisticasPageProps {
   sessions: WorkoutSession[];
   userName: string;
+  isLoading?: boolean;
 }
 
 
-export function EstatisticasPage({ sessions, userName }: EstatisticasPageProps) {
+export function EstatisticasPage({ sessions, userName, isLoading }: EstatisticasPageProps) {
   // Gera os rótulos para o eixo X do gráfico, como T1, T2, T3, etc.
   const labels = sessions.map((_, i) => `T${i + 1}`);
+
+  // Enquanto o fetch ainda está em andamento, exibe spinner
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-muted-foreground text-sm mt-4" style={{ fontFamily: "'Inter', sans-serif" }}>
+          Carregando estatísticas...
+        </p>
+      </div>
+    );
+  }
 
   // Se não houver sessões registradas, exibe uma mensagem informando que não há dados para mostrar
   if (sessions.length === 0) {
@@ -31,15 +44,15 @@ export function EstatisticasPage({ sessions, userName }: EstatisticasPageProps) 
   }
 
   // Extrai os dados relevantes das sessões para cada métrica que será exibida nos gráficos
-  const bpmPre    = sessions.map((s) => Number(s.pre.bpm) || 0);
+  const bpmPre = sessions.map((s) => Number(s.pre.bpm) || 0);
   const bpmDuring = sessions.map((s) => Number(s.during.bpm) || 0);
-  const bpmPost   = sessions.map((s) => Number(s.post.bpm) || 0);
-  const sisPre    = sessions.map((s) => Number(s.pre.systolic) || 0);
-  const diaPre    = sessions.map((s) => Number(s.pre.diastolic) || 0);
-  const sisPost   = sessions.map((s) => Number(s.post.systolic) || 0);
-  const diaPost   = sessions.map((s) => Number(s.post.diastolic) || 0);
+  const bpmPost = sessions.map((s) => Number(s.post.bpm) || 0);
+  const sisPre = sessions.map((s) => Number(s.pre.systolic) || 0);
+  const diaPre = sessions.map((s) => Number(s.pre.diastolic) || 0);
+  const sisPost = sessions.map((s) => Number(s.post.systolic) || 0);
+  const diaPost = sessions.map((s) => Number(s.post.diastolic) || 0);
   const distances = sessions.map((s) => Number(s.during.distance) || 0);
-  const speeds    = sessions.map((s) => Number(s.during.speed) || 0);
+  const speeds = sessions.map((s) => Number(s.during.speed) || 0);
   const durations = sessions.map((s) => Math.round(s.during.timeSeconds / 60));
 
   return (
@@ -72,9 +85,9 @@ export function EstatisticasPage({ sessions, userName }: EstatisticasPageProps) 
         unit="bpm"
         labels={labels}
         series={[
-          { values: bpmPre,    color: "#39ff14", label: "Pré" },
+          { values: bpmPre, color: "#39ff14", label: "Pré" },
           { values: bpmDuring, color: "#ff3131", label: "Durante" },
-          { values: bpmPost,   color: "#0099b3", label: "Pós", dashed: true },
+          { values: bpmPost, color: "#0099b3", label: "Pós", dashed: true },
         ]}
       />
 

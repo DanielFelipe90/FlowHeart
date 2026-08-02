@@ -1,5 +1,5 @@
 {
-  "name": "@figma/my-make-file",
+  "name": "flowheart-frontend",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -64,6 +64,7 @@
     "@rollup/rollup-win32-x64-msvc": "^4.62.2",
     "@tailwindcss/oxide-win32-x64-msvc": "^4.3.2",
     "@tailwindcss/vite": "4.1.12",
+    "@types/node": "^26.1.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "4.7.0",

@@ -17,9 +17,11 @@ import { useWorkout } from "../hooks/useWorkout";
 import { useInactivity } from "../hooks/useInactivity";
 import { useUserPresence } from "../hooks/useUserPresence";
 import { useSessionLifecycle } from "../hooks/useSessionLifecycle";
+import { useWorkoutTokenRefresh } from "../hooks/useWorkoutTokenRefresh";
 
+const loadEstatisticas = () => import("../pages/EstatisticasPage");
 const EstatisticasPage = lazy(() =>
-  import("../pages/EstatisticasPage").then((m) => ({ default: m.EstatisticasPage }))
+  loadEstatisticas().then((m) => ({ default: m.EstatisticasPage }))
 );
 
 function navigate(setPage: (p: AppPage) => void, page: AppPage) {
@@ -28,11 +30,23 @@ function navigate(setPage: (p: AppPage) => void, page: AppPage) {
     window.history.pushState(null, "", path);
   }
 
+  const run = () => setPage(page);
+
   if (!document.startViewTransition) {
-    setPage(page);
+    run();
     return;
   }
-  document.startViewTransition(() => setPage(page));
+
+  // Se for uma rota com componente lazy, garante que o chunk já
+  // esteja carregado ANTES de iniciar a transição, evitando que o
+  // Suspense suspenda no meio do startViewTransition (o que trava
+  // a transição na primeira visita à página).
+  if (page.tag === "estatisticas") {
+    loadEstatisticas().then(() => document.startViewTransition(run));
+    return;
+  }
+
+  document.startViewTransition(run);
 }
 
 export default function App() {
@@ -55,7 +69,7 @@ export default function App() {
   const {
     sessions, pre, setPre, during, setDuring, post, setPost,
     handleSetUserName, startNewWorkout, saveSession, deleteSession, logout,
-    deleteAccount, fetchSessions
+    deleteAccount, fetchSessions, isLoadingSessions
   } = workout;
 
   // Roda uma única vez, na montagem: sempre tenta validar a sessão contra o
@@ -72,6 +86,7 @@ export default function App() {
         handleSetUserName(user.name);
         setUserId(user.id);
         setIsLoggedIn(true);
+        loadEstatisticas();
         const fetchedSessions = await fetchSessions();
 
         const requested = parsePath(window.location.pathname, fetchedSessions);
@@ -169,7 +184,7 @@ export default function App() {
     navigate(setPage, { tag: "onboarding" });
   };
 
-  const isWorkoutActive = isTimerRunning || page.tag === "onboarding";
+  const isWorkoutActive = page.tag === "workout" || isTimerRunning;
 
   const { showModal, setShowModal, resetInactivity } = useInactivity(
     handleLogout,
@@ -186,6 +201,8 @@ export default function App() {
   useSessionLifecycle();
 
   useUserPresence(isLoggedIn && !isAuthChecking && !showModal);
+
+  useWorkoutTokenRefresh(isWorkoutActive);
 
   return (
     <>
@@ -282,7 +299,7 @@ export default function App() {
 
               {page.tag === "estatisticas" && (
                 <Suspense fallback={<div className="text-center py-10 text-muted-foreground">Carregando estatísticas…</div>}>
-                  <EstatisticasPage sessions={sessions} userName={userName} />
+                  <EstatisticasPage sessions={sessions} userName={userName} isLoading={isLoadingSessions} />
                 </Suspense>
               )}
 

@@ -16,12 +16,13 @@ import { apiLogout } from "../utils/api";
  */
 export function useWorkout(enabled: boolean) {
 
-  
+
   // ── Estado ────────────────────────────────────────────────────────────────
-  
+
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [userName, setUserName] = useState<string>(() => loadUserName());
   const [loadingSession, setLoadingSession] = useState(false);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
 
   // ── Carregar sessões da API ────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ export function useWorkout(enabled: boolean) {
    * Chamada ao logar ou ao montar o componente com token válido.
    */
   const fetchSessions = useCallback(async () => {
+    setIsLoadingSessions(true);
     try {
       const data = await apiGetSessions();
       setSessions(data as WorkoutSession[]);
@@ -37,12 +39,14 @@ export function useWorkout(enabled: boolean) {
     } catch (err) {
       console.error("Erro ao buscar sessões:", err);
       return [];
+    } finally {
+      setIsLoadingSessions(false);
     }
   }, []);
 
   useEffect(() => {
-     if (!enabled) return;
-     fetchSessions();
+    if (!enabled) return;
+    fetchSessions();
   }, [enabled, fetchSessions]);
   // ── Estado temporário do treino em andamento ───────────────────────────────
 
@@ -156,6 +160,7 @@ export function useWorkout(enabled: boolean) {
     sessions,
     userName,
     loadingSession,
+    isLoadingSessions,
     pre, setPre,
     during, setDuring,
     post, setPost,

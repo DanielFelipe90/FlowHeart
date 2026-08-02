@@ -52,3 +52,10 @@ export type AppPage =
   | { tag: "workout"; phase: Phase }
   | { tag: "history" }
   | { tag: "detail"; session: WorkoutSession };
+
+// Tipo para as opções de notificação, estendendo NotificationOptions com renotify e silent
+export type FlowNotificationOptions = NotificationOptions & {
+    renotify?: boolean;
+    silent?: boolean;
+    vibrate?: number[]; // Adiciona a propriedade vibrate para suportar vibração
+};
