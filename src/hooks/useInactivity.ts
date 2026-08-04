@@ -1,7 +1,16 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 
 const INACTIVITY_TIMEOUT = 25 * 60 * 1000; // 25 min até mostrar o modal
-const MODAL_TIMEOUT = 2 * 60 * 1000;        // 2 min de modal até logout automático
+// 5 minutos de modal (Total: 30 min, sincronizado com o Android e o JWT)
+const MODAL_TIMEOUT = 5 * 60 * 1000;
+
+// CORREÇÃO: avisa a ponte Android sobre a visibilidade do modal de inatividade da página.
+// Sem isso, o InactivityTracker nativo podia mostrar seu próprio AlertDialog ao mesmo tempo
+// que este modal, duplicando o aviso de sessão inativa para o usuário.
+function notifyAndroidInactivityState(visible: boolean) {
+  if (typeof window === "undefined") return;
+  (window as any).AndroidNative?.setInactivityWarningVisible?.(visible);
+}
 
 export function useInactivity(
   onInactive: () => void,
@@ -11,7 +20,6 @@ export function useInactivity(
 ) {
   const [showModal, setShowModal] = useState(false);
 
-  // Timers de UI (mostrar modal / deslogar)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const modalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -32,8 +40,10 @@ export function useInactivity(
 
   const startTimer = useCallback(() => {
     timerRef.current = setTimeout(() => {
+      // Se o treino estiver ativo, NUNCA exibe o modal de inatividade
       if (!isWorkoutActiveRef.current) {
         setShowModal(true);
+        notifyAndroidInactivityState(true);
         modalTimerRef.current = setTimeout(
           () => onInactiveRef.current(),
           MODAL_TIMEOUT
@@ -44,6 +54,7 @@ export function useInactivity(
 
   const resetInactivity = useCallback(() => {
     setShowModal(false);
+    notifyAndroidInactivityState(false);
     if (timerRef.current) clearTimeout(timerRef.current);
     if (modalTimerRef.current) clearTimeout(modalTimerRef.current);
     startTimer();
@@ -66,8 +77,9 @@ export function useInactivity(
       events.forEach(e => window.removeEventListener(e, resetTimer));
       if (timerRef.current) clearTimeout(timerRef.current);
       if (modalTimerRef.current) clearTimeout(modalTimerRef.current);
+      notifyAndroidInactivityState(false);
     };
-    
+
   }, [enabled, resetInactivity, startTimer]);
 
   return { showModal, setShowModal, resetInactivity };

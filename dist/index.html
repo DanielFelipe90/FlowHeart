@@ -5,6 +5,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Impede a execução de scripts inline não autorizados e fontes desconhecidas -->
+  <meta http-equiv="Content-Security-Policy" 
+  content="default-src 'self'; 
+           script-src 'self' 'sha256-Gj9AY2nLdaLrQGO3G8EsokG4CNCf+Hkkkbm+C0rZeRU='; 
+           style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
+           font-src 'self' https://fonts.gstatic.com; 
+           connect-src 'self' https://flowheart-api-541797931108.southamerica-east1.run.app;">
+
   <!-- PWA -->
   <meta name="theme-color" content="#0d0f14" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -33,10 +41,10 @@
       }
     })();
   </script>
-  <script type="module" crossorigin src="/assets/index-B-V_7oGp.js"></script>
+  <script type="module" crossorigin src="/assets/index-CSIYv19a.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/radix-DNh6H0mn.js">
   <link rel="modulepreload" crossorigin href="/assets/charts-gWHS4kFv.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-BEmhnrB0.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-CcubbtUY.css">
 <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 <body>
