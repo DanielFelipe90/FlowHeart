@@ -23,15 +23,15 @@ interface WorkoutPageProps {
   onTimerRunningChange: (running: boolean) => void;
 }
 
-export function WorkoutPage({ phase, userId, pre, setPre, during, setDuring, post, setPost, setPage, saveSession, onTimerRunningChange }: WorkoutPageProps) {
+export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPost, setPage, saveSession, onTimerRunningChange }: WorkoutPageProps) {
   // Determina se os botões de avançar ou salvar devem estar habilitados
   const canAdvancePre = pre.systolic && pre.diastolic && pre.bpm;
   const canAdvanceDuring = during.bpm;
   const canSavePost = post.systolic && post.diastolic && post.bpm;
   const [timerRunning, setTimerRunning] = useState(false);
 
+  // A entrega do BPM é 100% local (ponte nativa).
   const { status, currentBpm, isMobileOnline, getAverageBpm, resetReadings } = useBpm({
-    userId,
     enabled: phase === "during",
     onBpmReceived: (bpm) => {
       // Atualiza o BPM em tempo real só no modo sensor
@@ -118,7 +118,7 @@ export function WorkoutPage({ phase, userId, pre, setPre, during, setDuring, pos
                   Frequência Cardíaca
                 </p>
 
-                {/* Badge discreto com status do sensor */}
+                {/* Status do sensor */}
                 {mode === "sensor" && (
                   <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
                     <span className={`w-2 h-2 rounded-full ${status === "mobile_connected" ? "bg-emerald-500 animate-pulse" : "bg-amber-500 animate-pulse"
