@@ -11,7 +11,7 @@ import { DetailPage } from "../pages/DetailPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { LoginPage } from "../pages/LoginPage";
 import { PerfilPage } from "../pages/PerfilPage";
-import { apiGetMe, clearToken, initAuthToken } from "../utils/api";
+import { apiGetMe, clearToken, initAuthToken, notifyNativeUserAuthenticated } from "../utils/api";
 import { pageToPath, parsePath, PUBLIC_TAGS } from "../utils/routes";
 import { useWorkout } from "../hooks/useWorkout";
 import { useInactivity } from "../hooks/useInactivity";
@@ -85,6 +85,7 @@ export default function App() {
       .then(async (user) => {
         handleSetUserName(user.name);
         setUserId(user.id);
+        notifyNativeUserAuthenticated(user.id, user.name);
         setIsLoggedIn(true);
         loadEstatisticas();
         const fetchedSessions = await fetchSessions();
@@ -149,6 +150,7 @@ export default function App() {
       const user = await apiGetMe();
       handleSetUserName(user.name);
       setUserId(user.id);
+      notifyNativeUserAuthenticated(user.id, user.name);
       setIsLoggedIn(true);
       return true;
     } catch {

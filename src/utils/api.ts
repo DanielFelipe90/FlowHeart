@@ -54,10 +54,12 @@ export function initAuthToken(): string | null {
   return inMemoryToken;
 }
 
-// CORREÇÃO: notifica quem estiver ouvindo (ex.: o roteador da aplicação) que a sessão caiu,
-// para que a UI redirecione para a tela de login de forma coordenada, e avisa a ponte Android
-// para limpar o token persistido no SecureStorage — sem isso, o app nativo mantinha o token
-// salvo mesmo depois de a sessão ser invalidada pelo backend.
+export function notifyNativeUserAuthenticated(userId: string, name: string): void {
+  if (typeof window !== "undefined" && (window as any).AndroidNative?.onUserAuthenticated) {
+    (window as any).AndroidNative.onUserAuthenticated(userId, name);
+  }
+}
+
 function notifySessionEnded() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent("flowheart:unauthorized"));
@@ -83,11 +85,11 @@ export async function apiFetch(
   });
 
   if (response.status === 401) {
+    const hadToken = !!loadToken();
     clearToken();
-    // CORREÇÃO: antes só limpava o token em memória e lançava o erro — nada avisava o resto
-    // do app (ou o Android) que a sessão morreu, então o usuário podia ficar "preso" numa tela
-    // sem token válido, e o app nativo continuava achando que havia uma sessão salva.
-    notifySessionEnded();
+    if (hadToken) {
+      notifySessionEnded();
+    }
     throw new Error("UNAUTHORIZED");
   }
 
@@ -159,12 +161,45 @@ export async function apiDownloadReport(userName: string): Promise<void> {
   if (!res.ok) throw new Error("Erro ao gerar relatório");
 
   const blob = await res.blob();
+  const fileName = `flowheart_${userName.toLowerCase()}_${Date.now()}.pdf`;
+
+  // Dentro do WebView do app Kotlin, <a download> com blob: URL não dispara
+  // nenhum download nativo — o WebView só aciona DownloadListener pra URLs
+  // http(s) reais com Content-Disposition, não pra blob: gerado em runtime. Em
+  // vez disso, manda o PDF em base64 pra ponte nativa salvar direto no
+  // armazenamento do Android (ver AndroidNative.downloadFile no Kotlin).
+  const isNativeApp =
+    typeof window !== "undefined" && (window as any).mobileBpmBridge?.isNativeApp === true;
+
+  if (isNativeApp && (window as any).AndroidNative?.downloadFile) {
+    const base64 = await blobToBase64(blob);
+    (window as any).AndroidNative.downloadFile(base64, fileName, "application/pdf");
+    return;
+  }
+
+  // PWA no navegador: o fluxo padrão de blob URL + <a download> funciona normalmente.
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `flowheart_${userName.toLowerCase()}_${Date.now()}.pdf`;
+  a.download = fileName;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/** Converte um Blob em base64 puro (sem o prefixo "data:...;base64,"), pra
+ * mandar pela ponte JS-nativa — JavascriptInterface do Android só troca tipos
+ * simples (String, número, etc.), não Blob/ArrayBuffer. */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      const base64 = result.split(",")[1] ?? "";
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 export async function apiLogout(): Promise<void> {
@@ -177,9 +212,6 @@ export async function apiLogout(): Promise<void> {
   } catch (error) {
     console.error("Erro ao notificar logout:", error);
   } finally {
-    // CORREÇÃO: garante que o token local seja limpo e que a ponte Android seja avisada
-    // independentemente do resultado da chamada ao backend — antes isso ficava a cargo de quem
-    // chamava apiLogout(), e o SecureStorage do Android nunca era limpo nesse fluxo.
     clearToken();
     if (typeof window !== "undefined" && (window as any).AndroidNative?.onLogout) {
       (window as any).AndroidNative.onLogout();

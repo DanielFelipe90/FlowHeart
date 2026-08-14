@@ -8,7 +8,11 @@ export type BpmConnectionStatus =
 
 interface UseBpmOptions {
   enabled: boolean; // só ativa na fase "during"
-  onBpmReceived: (bpm: number) => void; // callback pra atualizar DuringState
+  // Opcional: callback de conveniência pra quem quiser reagir a cada leitura no
+  // momento em que ela chega. A sincronização de during.bpm no WorkoutPage NÃO
+  // depende mais disso — é feita reativamente a partir de `currentBpm`, pra não
+  // ficar sujeita à ordem de inicialização entre useBpm e useBpmMode.
+  onBpmReceived?: (bpm: number) => void;
 }
 
 // Mapeia o enum BpmMonitoringStatus do Android (MONITORING/STOPPED/ERROR) pro
@@ -42,6 +46,10 @@ declare global {
       setWorkoutActive?: (active: boolean) => void;
       onLogout?: () => void;
       setInactivityWarningVisible?: (visible: boolean) => void;
+      connectSensor?: () => void; // inicia HealthManager.connect() + fluxo de permissão do SDK no nativo
+      disconnectSensor?: () => void; // para o BpmService/BpmMonitor no nativo
+      connectMageneSensor?: () => void; // inicia scan+conexão BLE (MageneBleService) no nativo
+      disconnectMageneSensor?: () => void; // para o MageneBleService no nativo
     };
   }
 }
@@ -86,6 +94,8 @@ export function useBpm({ enabled, onBpmReceived }: UseBpmOptions) {
     const initialBpm = window.AndroidNative?.getLastBpm?.();
     if (typeof initialBpm === 'number' && initialBpm > 0) {
       setCurrentBpm(initialBpm);
+      bpmReadingsRef.current.push(initialBpm);
+      onBpmReceivedRef.current?.(initialBpm);
     }
 
     const handleBpm = (event: Event) => {
@@ -94,7 +104,7 @@ export function useBpm({ enabled, onBpmReceived }: UseBpmOptions) {
       if (typeof bpm === 'number') {
         setCurrentBpm(bpm);
         bpmReadingsRef.current.push(bpm);
-        onBpmReceivedRef.current(bpm);
+        onBpmReceivedRef.current?.(bpm);
       }
     };
 

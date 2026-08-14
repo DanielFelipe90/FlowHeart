@@ -27,7 +27,7 @@ export function Header({ page, setPage, userName, onLogout }: HeaderProps) {
               className="text-foreground">
               FLOW<span className="text-accent">HEART</span>
             </p>
-            <p className="text-muted-foreground" style={{ fontSize: "0.6rem", letterSpacing: "0.1em" }}>
+            <p className="text-foreground" style={{ fontSize: "0.6rem", letterSpacing: "0.1em" }}>
               BIKE TRAINING TRACKER
             </p>
           </div>

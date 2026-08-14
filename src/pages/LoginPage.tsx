@@ -45,6 +45,11 @@ export function LoginPage({ onAuthSuccess, setPage, onBack }: LoginPageProps) {
       setBlockedUntil(null);
       const success = await onAuthSuccess();
       if (success) {
+        // Sinaliza pro Android que a "sessão de login" terminou — é esse commit()
+        // que faz o Autofill Framework avaliar se deve oferecer o prompt de salvar
+        // usuário/senha dentro da WebView (sem isso, como é uma SPA que nunca
+        // navega/recarrega, o framework não tem como saber que o login concluiu).
+        (window as any).AndroidNative?.notifyLoginSuccess?.();
         setPage({ tag: "home" });
       } else {
         setErrorMessage("Não foi possível carregar seus dados. Tente novamente.");
@@ -94,7 +99,13 @@ export function LoginPage({ onAuthSuccess, setPage, onBack }: LoginPageProps) {
               Insira seus dados para continuar.
             </p>
           </div>
-          <div className="space-y-4">
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+          >
             <div>
               <label htmlFor="username" className="text-muted-foreground text-xs uppercase tracking-widest mb-2 block" style={{ fontFamily: "'Inter', sans-serif" }}>
                 Nome
@@ -103,7 +114,7 @@ export function LoginPage({ onAuthSuccess, setPage, onBack }: LoginPageProps) {
                 type="text"
                 id="username"
                 name="username"
-                autoComplete="name"
+                autoComplete="username"
                 placeholder="Digite seu nome"
                 value={name}
                 onChange={(e) => setName(e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, ""))}
@@ -118,10 +129,12 @@ export function LoginPage({ onAuthSuccess, setPage, onBack }: LoginPageProps) {
                 value={password}
                 onChange={setPassword}
                 placeholder="Sua senha"
+                autoComplete="current-password"
               />
             </div>
             {/* Lembrar de mim */}
             <button
+              type="button"
               onClick={() => setRememberMe((v) => !v)}
               className="flex items-center gap-3 w-full"
             >
@@ -138,14 +151,14 @@ export function LoginPage({ onAuthSuccess, setPage, onBack }: LoginPageProps) {
                 <p className="text-destructive text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
                   {errorMessage}
                 </p>
-                <button onClick={() => setErrorMessage("")} className="text-destructive hover:opacity-70 transition-opacity ml-3">
+                <button type="button" onClick={() => setErrorMessage("")} className="text-destructive hover:opacity-70 transition-opacity ml-3">
                   ✕
                 </button>
               </div>
             )}
             <button
+              type="submit"
               disabled={!canLogin || loading || isBlocked}
-              onClick={handleLogin}
               className="w-full rounded-xl py-4 flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 bg-primary text-primary-foreground"
             >
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
@@ -153,12 +166,13 @@ export function LoginPage({ onAuthSuccess, setPage, onBack }: LoginPageProps) {
               </span>
             </button>
             <button
+              type="button"
               onClick={onBack}
               className="w-full rounded-xl py-4 flex items-center justify-center border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
             >
               Voltar
             </button>
-          </div>
+          </form>
         </>
       )}
     </div>

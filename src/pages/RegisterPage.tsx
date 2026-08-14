@@ -32,6 +32,10 @@ export function RegisterPage({ onAuthSuccess, setPage, onBack }: RegisterPagePro
       saveToken(token, rememberMe);
       const success = await onAuthSuccess();
       if (success) {
+        // Mesmo raciocínio do LoginPage: sinaliza pro Android que a "sessão" de
+        // preenchimento terminou, pra o Autofill Framework avaliar o prompt de
+        // salvar usuário/senha dentro da WebView.
+        (window as any).AndroidNative?.notifyLoginSuccess?.();
         setPage({ tag: "home" });
       } else {
         setShowTerms(false);
@@ -63,7 +67,17 @@ export function RegisterPage({ onAuthSuccess, setPage, onBack }: RegisterPagePro
         </p>
       </div>
 
-      <div className="space-y-4">
+      <form
+        className="space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (password !== confirmPassword) {
+            setErrorMessage("As senhas não coincidem.");
+            return;
+          }
+          setShowTerms(true);
+        }}
+      >
         <div>
           <label
             htmlFor="username"
@@ -75,7 +89,7 @@ export function RegisterPage({ onAuthSuccess, setPage, onBack }: RegisterPagePro
             type="text"
             id="username"
             name="username"
-            autoComplete="name"
+            autoComplete="username"
             placeholder="Digite seu nome"
             value={name}
             onChange={(e) => setName(e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, ""))}
@@ -90,6 +104,7 @@ export function RegisterPage({ onAuthSuccess, setPage, onBack }: RegisterPagePro
             value={password}
             onChange={setPassword}
             placeholder="6 letras ou números"
+            autoComplete="new-password"
           />
         </div>
 
@@ -100,10 +115,12 @@ export function RegisterPage({ onAuthSuccess, setPage, onBack }: RegisterPagePro
             value={confirmPassword}
             onChange={setConfirmPassword}
             placeholder="Repita a senha"
+            autoComplete="new-password"
           />
         </div>
 
         <button
+          type="button"
           onClick={() => setRememberMe((v) => !v)}
           className="flex items-center gap-3 w-full"
         >
@@ -122,14 +139,8 @@ export function RegisterPage({ onAuthSuccess, setPage, onBack }: RegisterPagePro
         )}
 
         <button
+          type="submit"
           disabled={!canRegister || loading}
-          onClick={() => {
-            if (password !== confirmPassword) {
-              setErrorMessage("As senhas não coincidem.");
-              return;
-            }
-            setShowTerms(true);
-          }}
           className="w-full rounded-xl py-4 flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 bg-primary text-primary-foreground"
         >
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>
@@ -138,12 +149,13 @@ export function RegisterPage({ onAuthSuccess, setPage, onBack }: RegisterPagePro
         </button>
 
         <button
+          type="button"
           onClick={onBack}
           className="w-full rounded-xl py-4 flex items-center justify-center border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
         >
           Voltar
         </button>
-      </div>
+      </form>
 
       {showTerms && (
         <TermsModal

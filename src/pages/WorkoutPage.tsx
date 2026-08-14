@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Activity, Bike, ChevronRight, CheckCircle2, Radio, PenLine } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Activity, Bike, ChevronRight, CheckCircle2, Radio, PenLine, Bluetooth } from "lucide-react";
 import { MetricInput } from "../components/MetricInput";
 import { BloodPressureInput } from "../components/BloodPressureInput";
 import { WorkoutTimer } from "../components/WorkoutTimer";
@@ -26,30 +26,42 @@ interface WorkoutPageProps {
 export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPost, setPage, saveSession, onTimerRunningChange }: WorkoutPageProps) {
   // Determina se os botões de avançar ou salvar devem estar habilitados
   const canAdvancePre = pre.systolic && pre.diastolic && pre.bpm;
-  const canAdvanceDuring = during.bpm;
+  const canAdvanceDuring = Boolean(during.bpm) && Boolean(during.distance);
   const canSavePost = post.systolic && post.diastolic && post.bpm;
   const [timerRunning, setTimerRunning] = useState(false);
 
   // A entrega do BPM é 100% local (ponte nativa).
   const { status, currentBpm, isMobileOnline, getAverageBpm, resetReadings } = useBpm({
     enabled: phase === "during",
-    onBpmReceived: (bpm) => {
-      // Atualiza o BPM em tempo real só no modo sensor
-      if (mode === "sensor") {
-        setDuring(p => ({ ...p, bpm: String(bpm) }));
-      }
-    },
   });
 
-  const { mode, selectSensor, selectManual } = useBpmMode({ isMobileOnline });
+  const { mode, selectSensor, selectMagene, selectManual } = useBpmMode({ isMobileOnline });
+
+  // Sensor (Samsung Health) e Magene (BLE) são as duas fontes "automáticas" —
+  // ambas alimentam during.bpm a partir de currentBpm; só o Manual usa input.
+  const isAutoMode = mode === "sensor" || mode === "magene";
+
+  // Sincroniza during.bpm com a leitura do sensor de forma REATIVA (não mais via
+  // callback imperativo no momento do evento). Isso evita a corrida entre este
+  // hook e o useBpmMode: como useBpm é chamado antes de useBpmMode, um callback
+  // que checasse `mode === "sensor"` no instante do evento via a leitura inicial
+  // (cache) passar em branco, porque "mode" ainda estava null nesse ponto — e o
+  // sync inicial do useBpm só roda uma vez (não reexecuta quando "mode" muda
+  // depois). Com o efeito abaixo, a sincronização roda de novo sempre que
+  // "mode" OU "currentBpm" mudarem, em qualquer ordem.
+  useEffect(() => {
+    if (isAutoMode && currentBpm != null) {
+      setDuring((p) => ({ ...p, bpm: String(currentBpm) }));
+    }
+  }, [isAutoMode, currentBpm, setDuring]);
 
   // Hook customizado para lidar com notificações durante o treino
   useWorkoutNotifications(phase, during.timeSeconds, timerRunning);
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
   const handleAdvanceDuring = () => {
-    // Se estava no modo sensor, salva a média como BPM final
-    if (mode === "sensor") {
+    // Se estava numa fonte automática (sensor ou Magene), salva a média como BPM final
+    if (isAutoMode) {
       const avg = getAverageBpm();
       if (avg) setDuring(p => ({ ...p, bpm: avg }));
     }
@@ -63,9 +75,11 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
 
   // ─── Label de status do sensor ────────────────────────────────────────────
 
+  const autoSourceLabel = mode === "magene" ? "Magene H003" : "Fit 3 / Watch";
+
   const sensorStatusLabel = {
     disconnected: "Sensor desconectado",
-    waiting: "Aguardando Fit 3 / Watch...",
+    waiting: `Procurando ${autoSourceLabel}...`,
     mobile_connected: "Sensor conectado",
     mobile_disconnected: "Sensor perdido — reconectando...",
   }[status];
@@ -119,7 +133,7 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
                 </p>
 
                 {/* Status do sensor */}
-                {mode === "sensor" && (
+                {isAutoMode && (
                   <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
                     <span className={`w-2 h-2 rounded-full ${status === "mobile_connected" ? "bg-emerald-500 animate-pulse" : "bg-amber-500 animate-pulse"
                       }`} />
@@ -133,20 +147,30 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
               {/* Segmented Control (Abas unificadas estilo pílula) */}
               <div className="flex bg-secondary/40 p-1 rounded-xl border border-border/30">
                 <button
-                  disabled={!isMobileOnline && mode !== "sensor"}
                   onClick={selectSensor}
-                  className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed ${mode === "sensor"
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed ${mode === "sensor"
                     ? "bg-card text-foreground shadow-sm border border-border/10"
                     : "text-muted-foreground hover:text-foreground"
                     }`}
                 >
                   <Radio size={13} className={mode === "sensor" ? "text-primary" : ""} />
-                  Sensor IoT
+                  Watch
+                </button>
+
+                <button
+                  onClick={selectMagene}
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed ${mode === "magene"
+                    ? "bg-card text-foreground shadow-sm border border-border/10"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                  <Bluetooth size={13} className={mode === "magene" ? "text-primary" : ""} />
+                  Magene
                 </button>
 
                 <button
                   onClick={selectManual}
-                  className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all ${mode === "manual"
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all ${mode === "manual"
                     ? "bg-card text-foreground shadow-sm border border-border/10"
                     : "text-muted-foreground hover:text-foreground"
                     }`}
@@ -156,8 +180,8 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
                 </button>
               </div>
 
-              {/* ── Conteúdo do Modo Sensor ── */}
-              {mode === "sensor" && (
+              {/* ── Conteúdo dos modos automáticos (Watch / Magene) ── */}
+              {isAutoMode && (
                 <div className="flex flex-col items-center justify-center py-4 bg-card/20 rounded-xl border border-border/5">
                   <p className="text-xs text-muted-foreground mb-2 text-center max-w-[220px] leading-tight">
                     {sensorStatusLabel}

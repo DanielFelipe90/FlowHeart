@@ -9,9 +9,15 @@ interface PasswordInputProps {
   placeholder: string;
   id: string;
   label?: string; // Opcional, caso queira passar o label junto
+  // "current-password" (login) ou "new-password" (cadastro/troca de senha) — são
+  // tokens diferentes de propósito pro autofill: o primeiro sinaliza "preencher
+  // com a senha salva", o segundo sinaliza "esse é um campo de senha NOVA, não
+  // sugerir a antiga, e oferecer salvar essa como nova senha". Default cobre o
+  // caso mais comum (telas de login).
+  autoComplete?: "current-password" | "new-password";
 }
 
-export function PasswordInput({ value, onChange, placeholder, id, label }: PasswordInputProps) {
+export function PasswordInput({ value, onChange, placeholder, id, label, autoComplete = "current-password" }: PasswordInputProps) {
 
   // Estado para controlar se a senha está visível ou oculta
   const [show, setShow] = useState(false);
@@ -31,6 +37,7 @@ export function PasswordInput({ value, onChange, placeholder, id, label }: Passw
           value={value}
           placeholder={placeholder}
           maxLength={6}
+          autoComplete={autoComplete}
           onChange={(e) => onChange(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
           className="w-full rounded-xl border border-border bg-input-background px-4 py-3 text-foreground outline-none focus:border-primary transition-all pr-10"
           style={{ fontFamily: "'Inter', sans-serif" }}
