@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Activity, Bike, ChevronRight, CheckCircle2, Radio, PenLine, Bluetooth } from "lucide-react";
+import { Activity, Bike, ChevronRight, CheckCircle2, Radio, PenLine, Bluetooth, Heart, AlertTriangle } from "lucide-react";
 import { MetricInput } from "../components/MetricInput";
 import { BloodPressureInput } from "../components/BloodPressureInput";
 import { WorkoutTimer } from "../components/WorkoutTimer";
@@ -8,7 +8,7 @@ import { PhaseHeader } from "../components/PhaseHeader";
 import { StepIndicator } from "../components/StepIndicator";
 import type { AppPage, Phase, PreState, DuringState, PostState } from "../types";
 import { useWorkoutNotifications } from "../hooks/useWorkoutNotifications";
-import { useBpm } from "../hooks/useBpm";
+import { useBpm, type BpmConnectionStatus } from "../hooks/useBpm";
 import { useBpmMode } from "../hooks/useBpmMode";
 
 // Props para o componente WorkoutPage
@@ -24,43 +24,56 @@ interface WorkoutPageProps {
 }
 
 export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPost, setPage, saveSession, onTimerRunningChange }: WorkoutPageProps) {
-  // Determina se os botões de avançar ou salvar devem estar habilitados
   const canAdvancePre = pre.systolic && pre.diastolic && pre.bpm;
   const canAdvanceDuring = Boolean(during.bpm) && Boolean(during.distance);
   const canSavePost = post.systolic && post.diastolic && post.bpm;
   const [timerRunning, setTimerRunning] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // A entrega do BPM é 100% local (ponte nativa).
+  useEffect(() => {
+    setErrorMessage(null);
+  }, [phase]);
+
+  const isDuringPhase = phase === "during";
+
   const { status, currentBpm, isMobileOnline, getAverageBpm, resetReadings } = useBpm({
-    enabled: phase === "during",
+    enabled: isDuringPhase,
   });
 
-  const { mode, selectSensor, selectMagene, selectManual } = useBpmMode({ isMobileOnline });
-
-  // Sensor (Samsung Health) e Magene (BLE) são as duas fontes "automáticas" —
-  // ambas alimentam during.bpm a partir de currentBpm; só o Manual usa input.
+  const { mode, selectSensor, selectMagene, selectManual } = useBpmMode({
+    enabled: isDuringPhase,
+    isMobileOnline,
+    status,
+  });
   const isAutoMode = mode === "sensor" || mode === "magene";
 
-  // Sincroniza during.bpm com a leitura do sensor de forma REATIVA (não mais via
-  // callback imperativo no momento do evento). Isso evita a corrida entre este
-  // hook e o useBpmMode: como useBpm é chamado antes de useBpmMode, um callback
-  // que checasse `mode === "sensor"` no instante do evento via a leitura inicial
-  // (cache) passar em branco, porque "mode" ainda estava null nesse ponto — e o
-  // sync inicial do useBpm só roda uma vez (não reexecuta quando "mode" muda
-  // depois). Com o efeito abaixo, a sincronização roda de novo sempre que
-  // "mode" OU "currentBpm" mudarem, em qualquer ordem.
   useEffect(() => {
-    if (isAutoMode && currentBpm != null) {
-      setDuring((p) => ({ ...p, bpm: String(currentBpm) }));
-    }
+    if (!isAutoMode || currentBpm == null) return;
+    // Evita disparar setDuring (e o re-render que vem junto) quando a nova
+    // leitura é idêntica à já salva — o sensor pode reenviar o mesmo valor
+    // em eventos de status que não representam uma leitura nova.
+    setDuring((p) => (p.bpm === String(currentBpm) ? p : { ...p, bpm: String(currentBpm) }));
   }, [isAutoMode, currentBpm, setDuring]);
 
-  // Hook customizado para lidar com notificações durante o treino
   useWorkoutNotifications(phase, during.timeSeconds, timerRunning);
-  // ─── Handlers ─────────────────────────────────────────────────────────────
 
-  const handleAdvanceDuring = () => {
-    // Se estava numa fonte automática (sensor ou Magene), salva a média como BPM final
+  // ─── Handlers de Validação ─────────────────────────────────────────────────────────────
+  const handleStartDuringAttempt = () => {
+    if (!canAdvancePre) {
+      setErrorMessage("Preencha sua pressão arterial e frequência cardíaca para iniciar.");
+      return;
+    }
+    setErrorMessage(null);
+    resetReadings();
+    setPage({ tag: "workout", phase: "during" });
+  };
+
+  const handleAdvanceDuringAttempt = () => {
+    if (!canAdvanceDuring) {
+      setErrorMessage("Preencha a frequência cardíaca média e a distância percorrida para finalizar.");
+      return;
+    }
+    setErrorMessage(null);
     if (isAutoMode) {
       const avg = getAverageBpm();
       if (avg) setDuring(p => ({ ...p, bpm: avg }));
@@ -68,22 +81,37 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
     setPage({ tag: "workout", phase: "post" });
   };
 
-  const handleStartDuring = () => {
-    resetReadings();
-    setPage({ tag: "workout", phase: "during" });
+  const handleSaveSessionAttempt = () => {
+    if (!canSavePost) {
+      setErrorMessage("Preencha sua pressão arterial e frequência cardíaca finais para salvar.");
+      return;
+    }
+    setErrorMessage(null);
+    saveSession();
   };
 
-  // ─── Label de status do sensor ────────────────────────────────────────────
-
+  // ─── Lógica UI do Card de FC ────────────────────────────────────────────
   const autoSourceLabel = mode === "magene" ? "Magene H003" : "Fit 3 / Watch";
 
-  const sensorStatusLabel = {
+  const sensorStatusLabels: Record<BpmConnectionStatus, string> = {
     disconnected: "Sensor desconectado",
     waiting: `Procurando ${autoSourceLabel}...`,
     mobile_connected: "Sensor conectado",
     mobile_disconnected: "Sensor perdido — reconectando...",
-  }[status];
+  };
+  const sensorStatusLabel = sensorStatusLabels[status];
 
+  // Helper para determinar a cor do batimento baseado nas zonas cardíacas
+  const getBpmColor = (bpm: number | null) => {
+    if (!bpm) return "text-primary";
+    if (bpm < 85) return "text-foreground";           // Repouso/Leve
+    if (bpm < 110) return "text-emerald-500";          // Aquecimento/Queima Gordura
+    if (bpm < 130) return "text-amber-500";            // Aeróbico
+    return "text-destructive";                         // Anaeróbico/Extremo
+  };
+
+  // Altera a borda do card se o sinal cair durante o treino
+  const isDisconnectedWarning = isAutoMode && status === "mobile_disconnected";
 
   return (
     <div>
@@ -101,14 +129,24 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
             <MetricInput label="Frequência Cardíaca" unit="bpm" value={pre.bpm} onChange={(v) => setPre((p) => ({ ...p, bpm: v }))} placeholder="72" icon={<Activity size={14} />} min={30} max={250} />
             <IHBToggle value={pre.ihb} onChange={(v) => setPre((p) => ({ ...p, ihb: v }))} />
           </div>
-          <button
-            disabled={!canAdvancePre}
-            onClick={handleStartDuring}
-            className="w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 bg-primary text-primary-foreground"
-          >
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>INICIAR TREINO</span>
-            <ChevronRight size={18} />
-          </button>
+
+          <div className="mt-6 flex flex-col gap-2">
+            {errorMessage && (
+              <p className="text-destructive font-medium text-sm text-center animate-in fade-in slide-in-from-top-1">
+                {errorMessage}
+              </p>
+            )}
+            <button
+              onClick={handleStartDuringAttempt}
+              className={`w-full rounded-xl py-4 flex items-center justify-center gap-2 transition-all hover:opacity-90 ${canAdvancePre
+                ? "bg-primary text-primary-foreground"
+                : "bg-primary/50 text-primary-foreground/80"
+                }`}
+            >
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>INICIAR TREINO</span>
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -119,36 +157,42 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
             <WorkoutTimer
               onTimeChange={(s) => setDuring((p) => ({ ...p, timeSeconds: s }))}
               onRunningChange={(running) => {
-                onTimerRunningChange(running); // Notifica o App.tsx
-                setTimerRunning(running);      // Atualiza o estado local para as notificações
+                onTimerRunningChange(running);
+                setTimerRunning(running);
               }}
             />
 
-            {/* ── Card Frequência Cardíaca Premium ── */}
-            <div className="rounded-2xl border border-border bg-input-background p-5 shadow-sm space-y-4">
+            {/* ── Card Frequência Cardíaca ── */}
+            <div className={`rounded-2xl border bg-input-background p-5 shadow-sm space-y-4 transition-colors duration-300 ${isDisconnectedWarning ? "border-amber-500/50" : "border-border"
+              }`}>
               <div className="flex items-center justify-between">
-                <p className="text-muted-foreground text-xs uppercase tracking-widest font-semibold"
+                <p className="text-muted-foreground text-xs uppercase tracking-widest font-semibold flex items-center gap-2"
                   style={{ fontFamily: "'Inter', sans-serif" }}>
+                  {isDisconnectedWarning && <AlertTriangle size={14} className="text-amber-500" />}
                   Frequência Cardíaca
                 </p>
 
                 {/* Status do sensor */}
                 {isAutoMode && (
-                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
-                    <span className={`w-2 h-2 rounded-full ${status === "mobile_connected" ? "bg-emerald-500 animate-pulse" : "bg-amber-500 animate-pulse"
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10">
+                    <span className={`w-2 h-2 rounded-full ${status === "mobile_connected" ? "bg-emerald-500 animate-pulse" :
+                        status === "mobile_disconnected" ? "bg-amber-500" : "bg-muted-foreground animate-pulse"
                       }`} />
                     <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                      {status === "mobile_connected" ? "Online" : "Aguardando"}
+                      {status === "mobile_connected" ? "Online" :
+                        status === "mobile_disconnected" ? "Desconectado" : "Buscando"}
                     </span>
                   </div>
                 )}
               </div>
 
-              {/* Segmented Control (Abas unificadas estilo pílula) */}
-              <div className="flex bg-secondary/40 p-1 rounded-xl border border-border/30">
+              {/* Segmented Control - Com Acessibilidade (Roles) */}
+              <div role="tablist" className="flex bg-secondary/40 p-1 rounded-xl border border-border/30">
                 <button
+                  role="tab"
+                  aria-selected={mode === "sensor"}
                   onClick={selectSensor}
-                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed ${mode === "sensor"
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all focus-visible:ring ${mode === "sensor"
                     ? "bg-card text-foreground shadow-sm border border-border/10"
                     : "text-muted-foreground hover:text-foreground"
                     }`}
@@ -158,8 +202,10 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
                 </button>
 
                 <button
+                  role="tab"
+                  aria-selected={mode === "magene"}
                   onClick={selectMagene}
-                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed ${mode === "magene"
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all focus-visible:ring ${mode === "magene"
                     ? "bg-card text-foreground shadow-sm border border-border/10"
                     : "text-muted-foreground hover:text-foreground"
                     }`}
@@ -169,8 +215,10 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
                 </button>
 
                 <button
+                  role="tab"
+                  aria-selected={mode === "manual"}
                   onClick={selectManual}
-                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all ${mode === "manual"
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all focus-visible:ring ${mode === "manual"
                     ? "bg-card text-foreground shadow-sm border border-border/10"
                     : "text-muted-foreground hover:text-foreground"
                     }`}
@@ -180,29 +228,35 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
                 </button>
               </div>
 
-              {/* ── Conteúdo dos modos automáticos (Watch / Magene) ── */}
+              {/* ── Conteúdo dos modos automáticos ── */}
               {isAutoMode && (
-                <div className="flex flex-col items-center justify-center py-4 bg-card/20 rounded-xl border border-border/5">
-                  <p className="text-xs text-muted-foreground mb-2 text-center max-w-[220px] leading-tight">
+                <div className="flex flex-col items-center justify-center min-h-[140px] bg-card/20 rounded-xl border border-border/5">
+                  <p className={`text-xs mb-2 text-center max-w-[220px] leading-tight transition-colors ${isDisconnectedWarning ? "text-amber-500 font-medium" : "text-muted-foreground"
+                    }`}>
                     {sensorStatusLabel}
                   </p>
 
                   {currentBpm ? (
-                    <div className="flex items-baseline justify-center gap-1.5">
-                      {/* Coração pulsante para dar a sensação de leitura em tempo real */}
-                      <Activity size={22} className="text-destructive animate-pulse mr-1 self-center" />
+                    <div className="flex items-baseline justify-center gap-2 animate-in zoom-in-95 duration-200">
+                      <Heart
+                        size={28}
+                        className={`${getBpmColor(currentBpm)} animate-heartbeat fill-current self-center mr-1 drop-shadow-sm`}
+                      />
                       <span
-                        className="text-primary font-bold tracking-tighter"
-                        style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "3.5rem", lineHeight: 1 }}
+                        className={`${getBpmColor(currentBpm)} font-bold tracking-tighter tabular-nums text-5xl sm:text-6xl`}
+                        style={{ fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}
                       >
                         {currentBpm}
                       </span>
                       <span className="text-muted-foreground text-sm font-semibold uppercase">bpm</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 py-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30 animate-ping" />
-                      <span className="text-muted-foreground text-sm font-medium tracking-wide">Aguardando sinal...</span>
+                    <div className="flex items-center justify-center gap-2 py-4 h-[60px] animate-in fade-in">
+                      <div className="w-2 h-2 rounded-full bg-primary/40 animate-ping" />
+                      <span className="text-primary/60 text-4xl font-bold tracking-tighter tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                        --
+                      </span>
+                      <span className="text-muted-foreground/50 text-sm font-semibold uppercase">bpm</span>
                     </div>
                   )}
                 </div>
@@ -210,11 +264,16 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
 
               {/* ── Conteúdo do Modo Manual ── */}
               {mode === "manual" && (
-                <div className="animate-in fade-in slide-in-from-bottom-1 duration-200">
+                <div className="animate-in fade-in slide-in-from-bottom-1 duration-200 mt-4">
                   <MetricInput
-                    label="" unit="bpm" value={during.bpm}
+                    label="Inserir Manualmente"
+                    unit="bpm"
+                    value={during.bpm}
                     onChange={(v) => setDuring(p => ({ ...p, bpm: v }))}
-                    placeholder="158" icon={<Activity size={14} />} min={30} max={250}
+                    placeholder="158"
+                    icon={<Heart size={14} className="text-muted-foreground" />}
+                    min={30}
+                    max={250}
                   />
                 </div>
               )}
@@ -222,15 +281,24 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
 
             <MetricInput label="Distância Percorrida" unit="km" value={during.distance} onChange={(v) => setDuring((p) => ({ ...p, distance: v }))} placeholder="20.0" icon={<Bike size={14} />} />
           </div>
-          <button
-            disabled={!canAdvanceDuring}
-            onClick={handleAdvanceDuring}
-            className={`w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 ${canAdvanceDuring ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
-              }`}
-          >
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>FINALIZAR TREINO</span>
-            <ChevronRight size={18} />
-          </button>
+
+          <div className="mt-6 flex flex-col gap-2">
+            {errorMessage && (
+              <p className="text-destructive font-medium text-sm text-center animate-in fade-in slide-in-from-top-1">
+                {errorMessage}
+              </p>
+            )}
+            <button
+              onClick={handleAdvanceDuringAttempt}
+              className={`w-full rounded-xl py-4 flex items-center justify-center gap-2 transition-all hover:opacity-90 ${canAdvanceDuring
+                ? "bg-primary text-primary-foreground"
+                : "bg-primary/50 text-primary-foreground/80"
+                }`}
+            >
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>FINALIZAR TREINO</span>
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -246,15 +314,24 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
             <MetricInput label="Frequência Cardíaca" unit="bpm" value={post.bpm} onChange={(v) => setPost((p) => ({ ...p, bpm: v }))} placeholder="88" icon={<Activity size={14} />} min={30} max={250} />
             <IHBToggle value={post.ihb} onChange={(v) => setPost((p) => ({ ...p, ihb: v }))} />
           </div>
-          <button
-            disabled={!canSavePost}
-            onClick={saveSession}
-            className={`w-full mt-6 rounded-xl py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 ${canSavePost ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
-              }`}
-          >
-            <CheckCircle2 size={18} />
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>SALVAR TREINO</span>
-          </button>
+
+          <div className="mt-6 flex flex-col gap-2">
+            {errorMessage && (
+              <p className="text-destructive font-medium text-sm text-center animate-in fade-in slide-in-from-top-1">
+                {errorMessage}
+              </p>
+            )}
+            <button
+              onClick={handleSaveSessionAttempt}
+              className={`w-full rounded-xl py-4 flex items-center justify-center gap-2 transition-all hover:opacity-90 ${canSavePost
+                ? "bg-primary text-primary-foreground"
+                : "bg-primary/50 text-primary-foreground/80"
+                }`}
+            >
+              <CheckCircle2 size={18} />
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.05em" }}>SALVAR TREINO</span>
+            </button>
+          </div>
         </div>
       )}
     </div>

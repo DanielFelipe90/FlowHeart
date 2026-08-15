@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef, Suspense, lazy } from "react";
 import type { AppPage, WorkoutSession } from "../types";
 import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
 import { InactivityModal } from "../components/InactivityModal";
 import { OnboardingPage } from "../pages/OnboardingPage";
 import { HomePage } from "../pages/HomePage";
@@ -230,8 +229,7 @@ export default function App() {
         <main className="max-w-lg mx-auto px-4 py-6">
           {isAuthChecking ? (
             /* Splash screen adaptável ao modo Claro / Escuro */
-            <div className="flex flex-col items-center justify-center py-32 bg-background">
-              {/* O círculo giratório usa o azul/verde primário do tema correspondente */}
+            <div className="fixed inset-0 flex flex-col items-center justify-center bg-background z-50">              {/* O círculo giratório usa o azul/verde primário do tema correspondente */}
               <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
               {/* O texto se adapta à cor secundária do tema */}
               <p className="text-muted-foreground text-sm mt-4 animate-pulse" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -315,11 +313,6 @@ export default function App() {
           )}
         </main>
 
-        {(page.tag === "onboarding" ||
-          page.tag === "home" ||
-          page.tag === "register" ||
-          page.tag === "login" ||
-          page.tag === "perfil") && <Footer />}
       </div>
     </>
   );
