@@ -8,8 +8,7 @@ import { PhaseHeader } from "../components/PhaseHeader";
 import { StepIndicator } from "../components/StepIndicator";
 import type { AppPage, Phase, PreState, DuringState, PostState } from "../types";
 import { useWorkoutNotifications } from "../hooks/useWorkoutNotifications";
-import { useBpm, type BpmConnectionStatus } from "../hooks/useBpm";
-import { useBpmMode } from "../hooks/useBpmMode";
+import { useBpmSource, type BpmConnectionStatus } from "../hooks/useBpmSource";
 
 // Props para o componente WorkoutPage
 interface WorkoutPageProps {
@@ -36,15 +35,8 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
 
   const isDuringPhase = phase === "during";
 
-  const { status, currentBpm, isMobileOnline, getAverageBpm, resetReadings } = useBpm({
-    enabled: isDuringPhase,
-  });
-
-  const { mode, selectSensor, selectMagene, selectManual } = useBpmMode({
-    enabled: isDuringPhase,
-    isMobileOnline,
-    status,
-  });
+  const { mode, status, currentBpm, getAverageBpm, resetReadings, selectSensor, selectMagene, selectManual } =
+    useBpmSource({ enabled: isDuringPhase });
   const isAutoMode = mode === "sensor" || mode === "magene";
 
   useEffect(() => {
@@ -240,7 +232,7 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
                     <div className="flex items-baseline justify-center gap-2 animate-in zoom-in-95 duration-200">
                       <Heart
                         size={28}
-                        className={`${getBpmColor(currentBpm)} animate-heartbeat fill-current self-center mr-1 drop-shadow-sm`}
+                        className={`${getBpmColor(currentBpm)} text-accent animate-heartbeat fill-current self-center mr-1 drop-shadow-sm`}
                       />
                       <span
                         className={`${getBpmColor(currentBpm)} font-bold tracking-tighter tabular-nums text-5xl sm:text-6xl`}
