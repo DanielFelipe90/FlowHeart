@@ -92,7 +92,7 @@ export function SessionHistory({ sessions, onSelect, onDelete }: SessionHistoryP
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs mb-1">BPM Pico</p>
+                <p className="text-muted-foreground text-xs mb-1">BPM Médio</p>
                 <p className="text-destructive" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
                   {s.during.bpm}
                 </p>

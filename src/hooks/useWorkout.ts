@@ -55,7 +55,7 @@ export function useWorkout(enabled: boolean) {
   });
 
   const [during, setDuring] = useState<DuringState>({
-    systolic: "", diastolic: "", bpm: "", distance: "", timeSeconds: 0, speed: "",
+    systolic: "", diastolic: "", bpm: "", distance: "", timeSeconds: 0, speed: "", bpmSeries: [],
   });
 
   const [post, setPost] = useState<PostState>({
@@ -78,7 +78,7 @@ export function useWorkout(enabled: boolean) {
    */
   function startNewWorkout() {
     setPre({ systolic: "", diastolic: "", bpm: "", ihb: false });
-    setDuring({ systolic: "", diastolic: "", bpm: "", distance: "", timeSeconds: 0, speed: "" });
+    setDuring({ systolic: "", diastolic: "", bpm: "", distance: "", timeSeconds: 0, speed: "", bpmSeries: [] });
     setPost({ systolic: "", diastolic: "", bpm: "", ihb: false });
   }
 

@@ -35,7 +35,7 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
 
   const isDuringPhase = phase === "during";
 
-  const { mode, status, currentBpm, getAverageBpm, resetReadings, selectSensor, selectMagene, selectManual } =
+  const { mode, status, currentBpm, getAverageBpm, getReadings, resetReadings, selectSensor, selectMagene, selectManual } =
     useBpmSource({ enabled: isDuringPhase });
   const isAutoMode = mode === "sensor" || mode === "magene";
 
@@ -68,7 +68,12 @@ export function WorkoutPage({ phase, pre, setPre, during, setDuring, post, setPo
     setErrorMessage(null);
     if (isAutoMode) {
       const avg = getAverageBpm();
-      if (avg) setDuring(p => ({ ...p, bpm: avg }));
+      const readings = getReadings();
+      setDuring(p => ({
+        ...p,
+        ...(avg ? { bpm: avg } : {}),
+        bpmSeries: readings,
+      }));
     }
     setPage({ tag: "workout", phase: "post" });
   };

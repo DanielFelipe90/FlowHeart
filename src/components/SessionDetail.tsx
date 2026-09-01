@@ -2,6 +2,8 @@ import { AlertCircle } from "lucide-react";
 import { ArrowLeft, Clock, Bike } from "lucide-react";
 import type { WorkoutSession } from "../types";
 import { SimpleLineChart, useContainerWidth } from "./SimpleLineChart";
+// Importe o novo componente (ajuste o caminho se ele estiver em outra pasta)
+import { HeartRateChart } from "./HeartRateChart";
 
 // Props para o componente SessionDetail
 interface SessionDetailProps {
@@ -21,17 +23,40 @@ function fmtTime(s: number) {
 // Componente principal que exibe os detalhes de uma sessão de treino
 const PHASE_LABELS = ["Pré", "Durante", "Pós"];
 
-export function SessionDetail({ session, onBack }: SessionDetailProps) {
+/** Gera rótulos de tempo (mm:ss) igualmente espaçados ao longo da duração total. */
+function timeLabels(count: number, totalSeconds: number): string[] {
+  if (count <= 1) return ["00:00"];
+  return Array.from({ length: count }, (_, i) => {
+    const t = Math.round((i / (count - 1)) * totalSeconds);
+    const m = Math.floor(t / 60);
+    const s = t % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  });
+}
 
-  // Hook customizado para obter a largura do contêiner, usado para dimensionar o gráfico de BPM
+export function SessionDetail({ session, onBack }: SessionDetailProps) {
+  // Hook customizado para obter a largura do contêiner para o gráfico simples das Fases
   const bpmRef = useContainerWidth();
 
-  // Array de valores de BPM para cada fase do treino, garantindo que sejam números válidos
+  // Array de valores de BPM para cada fase do treino
   const bpmValues = [
     Number(session.pre.bpm) || 0,
     Number(session.during.bpm) || 0,
     Number(session.post.bpm) || 0,
   ];
+
+  // Série de BPM completa ao longo do treino (fase "durante").
+  const rawBpmSeries = session.during.bpmSeries ?? [];
+  const hasBpmTimeline = rawBpmSeries.length >= 2;
+
+  // Preparação de dados usando TODOS os pontos capturados na sessão
+  const allTimeLabels = timeLabels(rawBpmSeries.length, session.during.timeSeconds);
+  const chartData = rawBpmSeries.map((bpm, index) => ({
+    dateLabel: allTimeLabels[index],
+    bpm: bpm,
+  }));
+
+  const maxDuringBpm = Math.max(...rawBpmSeries);
 
   return (
     <div className="space-y-6 flex flex-col justify-center min-h-[70vh]">
@@ -122,13 +147,13 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
         </div>
       </div>
 
-      {/* Gráfico BPM */}
+      {/* Gráfico BPM (Resumo das Fases - Mantido) */}
       <div className="rounded-xl bg-card border border-border p-4 mb-4">
         <p
           className="text-muted-foreground text-xs uppercase tracking-widest mb-3"
           style={{ fontFamily: "'Inter', sans-serif" }}
         >
-          Frequência Cardíaca (BPM)
+          Resumo de Frequência (Fases)
         </p>
         <div ref={bpmRef.ref} style={{ width: "100%", height: 130 }}>
           {bpmRef.width > 0 && (
@@ -143,8 +168,15 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
         </div>
       </div>
 
+      {/* Gráfico de evolução Completa do BPM usando HeartRateChart */}
+      {hasBpmTimeline && (
+        <div className="mb-4 mt-8">
+          <HeartRateChart data={chartData} lineColor="#ff3131" gradientStartColor="#ff3131" />
+        </div>
+      )}
+
       {/* Tabela por fase */}
-      <div className="space-y-2" style={{ paddingBottom: "0.5rem" }}>
+      <div className="space-y-2" style={{ paddingBottom: "0.5rem", marginTop: "1.5rem" }}>
         {[
           {
             label: "Pré-Treino",
@@ -158,7 +190,7 @@ export function SessionDetail({ session, onBack }: SessionDetailProps) {
             label: "Durante-Treino",
             sys: null,
             dia: null,
-            bpm: session.during.bpm,
+            bpm: maxDuringBpm,
             ihb: null as boolean | null,
             color: "#ff3131",
           },

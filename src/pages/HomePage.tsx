@@ -53,7 +53,7 @@ export function HomePage({ userName, sessions, setPage, startNewWorkout }: HomeP
             <p className="text-muted-foreground text-xs uppercase tracking-widest mb-3 font-semibold">Último Treino</p>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <p className="text-muted-foreground text-xs mb-1">BPM Máx</p>
+                <p className="text-muted-foreground text-xs mb-1">BPM Médio</p>
                 <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "1.4rem", fontWeight: 700 }}
                   className="text-destructive">
                   {last.during.bpm}

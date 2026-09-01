@@ -19,6 +19,7 @@ export type DuringState = {
   distance: string;
   timeSeconds: number;
   speed: string;
+  bpmSeries?: number[];
 };
 
 /** Dados coletados após o treino */
